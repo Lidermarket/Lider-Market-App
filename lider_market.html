@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LÍDER MARKET - Sistema de Control de Inventario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .count-input {
+            font-size: 2rem;
+            font-weight: bold;
+            max-width: 100px;
+            background: #fef3c7;
+            border: 3px solid #f59e0b;
+        }
+
+        .count-input:focus {
+            background: #fef9c3;
+            border-color: #d97706;
+        }
+
+        .flex {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .supplier-card {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .supplier-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-card {
+            border-left: 4px solid #d1d5db;
+            transition: border-color 0.3s;
+        }
+
+        .product-card.counted {
+            border-left-color: #059669;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .count-button {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .count-button:active {
+            transform: scale(0.95);
+        }
+
+        .count-button.plus {
+            background: #059669;
+            color: white;
+        }
+
+        .count-button.minus {
+            background: #dc2626;
+            color: white;
+        }
+
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            border-top: 1px solid #d1d5db;
+            box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+        }
+
+        .progress-info {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .results-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2563eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .results-header {
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .results-header:hover {
+            background: #f8fafc;
+        }
+
+        .results-card.expanded .results-header {
+            background: #f0f9ff;
+        }
+
+        .results-content {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .expand-icon {
+            transition: transform 0.2s;
+            font-size: 1.25rem;
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+            color: #059669;
+        }
+
+        .results-product {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #d1d5db;
+        }
+
+        .results-product.has-count {
+            background: #f0fdf4;
+            border-left-color: #059669;
+        }
+
+        .results-product.no-count {
+            background: #fefce8;
+            border-left-color: #eab308;
+        }
+
+        .order-summary {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-total {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .admin-header {
+            background: #f59e0b;
+        }
+
+        .import-stats {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .import-error {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #dc2626;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .preview-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+            .flex {
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="header">
+                <h1>LÍDER MARKET</h1>
+                <p>Sistema de Control de Inventario</p>
+            </div>
+            <div class="container">
+                <div class="card" style="max-width: 400px; margin: 2rem auto;">
+                    <h2 class="text-center" style="margin-bottom: 1.5rem;">Iniciar Sesión</h2>
+                    
+                    <div class="flex" style="margin-bottom: 1rem; background: #f3f4f6; border-radius: 0.5rem; padding: 0.25rem;">
+                        <button id="userTab" class="btn" style="flex: 1; background: #2563eb; color: white;">Usuario</button>
+                        <button id="adminTab" class="btn" style="flex: 1; background: transparent; color: #6b7280;">Admin</button>
+                    </div>
+
+                    <input type="text" id="username" class="input" placeholder="Ingrese su nombre" style="margin-bottom: 1rem;">
+                    
+                    <div id="passwordField" class="hidden" style="margin-bottom: 1rem;">
+                        <input type="password" id="password" class="input" placeholder="Ingrese la contraseña de administrador">
+                    </div>
+
+                    <button id="loginBtn" class="btn btn-primary" style="width: 100%;">Ingresar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="hidden">
+            <div class="header">
+                <div class="flex justify-between">
+                    <div>
+                        <h1>LÍDER MARKET</h1>
+                        <p id="welcomeUser">Hola, Usuario</p>
+                    </div>
+                    <button id="logoutBtn" class="btn" style="background: rgba(255,255,255,0.2);">Salir</button>
+                </div>
+            </div>
+            <div class="container">
+                <!-- Navigation Tabs -->
+                <div class="flex" style="margin-bottom: 1.5rem; background: #f3f4f6; border-radius: 0.75rem; padding: 0.25rem;">
+                    <button id="countingTab" class="btn" style="flex: 1; background: #2563eb; color: white; margin: 0;">📦 Conteo</button>
+                    <button id="resultsTab" class="btn" style="flex: 1; background: transparent; color: #6b7280; margin: 0;">📊 Resultados</button>
+                </div>
+
+                <!-- Counting Section -->
+                <div id="countingSection">
+                    <h2 style="margin-bottom: 1rem;">Seleccionar Proveedor</h2>
+                    <div id="suppliersList"></div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden">
+                    <h2 style="margin-bottom: 1rem;">Resultados de Conteos</h2>
+                    <div id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden">
+            <div class="header admin-header">
+                <div class="flex justify-between">
+                    <div>
+                        <h1>LÍDER MARKET - ADMIN</h1>
+                        <p>Panel de Administración</p>
+                    </div>
+                    <button id="adminLogoutBtn" class="btn" style="background: rgba(255,255,255,0.2);">Salir</button>
+                </div>
+            </div>
+            <div class="container">
+                <div class="card">
+                    <h2 style="margin-bottom: 1rem;">📋 Importación de Productos</h2>
+                    
+                    <!-- Guía de formato -->
+                    <div style="background: #dbeafe; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <h3 style="font-weight: 600; margin-bottom: 0.5rem; color: #1e40af;">📝 Formato requerido (6 columnas):</h3>
+                        <div style="font-family: monospace; font-size: 0.875rem; line-height: 1.4; background: white; padding: 0.5rem; border-radius: 0.25rem; margin: 0.5rem 0;">
+                            <strong>A:</strong> Proveedor | <strong>B:</strong> Producto | <strong>C:</strong> Max Stock | <strong>D:</strong> Código | <strong>E:</strong> Unidades/Paq | <strong>F:</strong> Tipo
+                        </div>
+                        <div style="background: #059669; color: white; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.875rem;">
+                            💡 <strong>Ejemplo:</strong> Coca-Cola&nbsp;&nbsp;&nbsp;&nbsp;Coca Cola 600ml&nbsp;&nbsp;&nbsp;&nbsp;240&nbsp;&nbsp;&nbsp;&nbsp;7501055365050&nbsp;&nbsp;&nbsp;&nbsp;24&nbsp;&nbsp;&nbsp;&nbsp;PAQUETE
+                        </div>
+                    </div>
+
+                    <textarea id="importData" class="input" 
+                              style="min-height: 200px; font-family: monospace; font-size: 0.875rem; text-align: left;" 
+                              placeholder="Pega aquí los datos copiados desde Excel/Google Sheets...
+
+📋 Formato: Proveedor  Producto  Max Stock  Código  Unidades/Paq  Tipo
+
+Ejemplo:
+Coca-Cola	Coca Cola 600ml	240	7501055365050	24	PAQUETE
+Panadería	Bolillo	100	BOLILLO001	1	INDIVIDUAL"></textarea>
+                    
+                    <div class="flex" style="gap: 1rem; margin-top: 1rem;">
+                        <button id="previewBtn" class="btn btn-primary" style="flex: 1;">👁️ Vista Previa</button>
+                        <button id="saveBtn" class="btn btn-success" style="flex: 1;" disabled>💾 Guardar</button>
+                        <button id="clearBtn" class="btn btn-danger">🗑️ Limpiar</button>
+                    </div>
+                    
+                    <button id="loadExampleBtn" class="btn" style="background: #059669; color: white; margin-top: 1rem; width: 100%;">
+                        ⚡ Cargar Datos de Prueba
+                    </button>
+
+                    <div id="previewContainer" class="hidden" style="margin-top: 1.5rem;"></div>
+                </div>
+
+                <!-- Gestión de datos -->
+                <div class="card">
+                    <h2 style="margin-bottom: 1rem;">⚙️ Gestión de Datos</h2>
+                    <div id="managementInfo" style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div class="flex justify-between" style="margin-bottom: 0.5rem;">
+                            <span><strong>Proveedores:</strong> <span id="supplierCount">0</span></span>
+                            <span><strong>Productos:</strong> <span id="productCount">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Seguridad -->
+                    <div style="background: #fef2f2; border: 2px solid #fecaca; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-weight: 600; margin-bottom: 0.75rem; color: #dc2626;">🔐 Configuración de Seguridad</h3>
+                        <p style="font-size: 0.875rem; color: #dc2626; margin-bottom: 1rem;">
+                            Cambia la contraseña de administrador para mantener la seguridad del sistema.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input type="password" id="currentPassword" class="input" placeholder="Contraseña actual" style="text-align: left;">
+                            <input type="password" id="newPassword" class="input" placeholder="Nueva contraseña" style="text-align: left;">
+                        </div>
+                        <input type="password" id="confirmPassword" class="input" placeholder="Confirmar nueva contraseña" style="text-align: left; margin-bottom: 0.5rem;">
+                        <button id="changePasswordBtn" class="btn" style="width: 100%; background: #dc2626; color: white;">🔐 Cambiar Contraseña</button>
+                    </div>
+
+                    <!-- Exportar/Compartir Sistema -->
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-weight: 600; margin-bottom: 0.75rem; color: #1e40af;">📤 Compartir Sistema Cargado</h3>
+                        <p style="font-size: 0.875rem; color: #1e40af; margin-bottom: 1rem;">
+                            Exporta la aplicación completa con todos los proveedores y productos para enviarla a otros dispositivos.
+                        </p>
+                        <div class="grid grid-2" style="gap: 0.5rem;">
+                            <button id="exportSystemBtn" class="btn btn-primary" style="margin: 0;">📱 Compartir por WhatsApp</button>
+                            <button id="exportEmailBtn" class="btn" style="margin: 0; background: #059669; color: white;">📧 Enviar por Email</button>
+                            <button id="downloadSystemBtn" class="btn" style="margin: 0; background: #6b7280; color: white;">💾 Descargar Archivo</button>
+                            <button id="copySystemBtn" class="btn" style="margin: 0; background: #f59e0b; color: white;">📋 Copiar Datos</button>
+                        </div>
+                    </div>
+
+                    <!-- Importar Sistema -->
+                    <div style="background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-weight: 600; margin-bottom: 0.75rem; color: #059669;">📥 Importar Sistema Completo</h3>
+                        <p style="font-size: 0.875rem; color: #059669; margin-bottom: 1rem;">
+                            Importa una aplicación completa con proveedores y productos desde otro dispositivo.
+                        </p>
+                        <textarea id="importSystemData" class="input" style="min-height: 100px; font-family: monospace; font-size: 0.875rem; text-align: left; margin-bottom: 0.5rem;" placeholder="Pega aquí los datos del sistema exportado..."></textarea>
+                        <button id="importSystemBtn" class="btn btn-success" style="width: 100%;">📥 Importar Sistema</button>
+                    </div>
+
+                    <button id="clearAllBtn" class="btn btn-danger" style="width: 100%;">🗑️ Limpiar Todos los Datos</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Counting Screen -->
+        <div id="countingScreen" class="hidden">
+            <div class="header">
+                <div class="flex justify-between">
+                    <div>
+                        <h1 id="supplierName">Proveedor</h1>
+                        <p id="currentUser">Usuario</p>
+                    </div>
+                    <button id="backBtn" class="btn" style="background: rgba(255,255,255,0.2);">← Volver</button>
+                </div>
+            </div>
+            <div class="container" style="padding-bottom: 8rem;">
+                <div id="progressInfo" class="progress-info"></div>
+                
+                <!-- Botón para limpiar conteos anteriores -->
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                    <div class="flex justify-between" style="align-items: center;">
+                        <div>
+                            <h3 style="font-weight: 600; margin-bottom: 0.25rem; color: #92400e;">🔄 Reiniciar Conteos</h3>
+                            <p style="font-size: 0.875rem; color: #92400e; margin: 0;">Poner todos los conteos en cero para empezar de nuevo</p>
+                        </div>
+                        <button id="clearCountsBtn" class="btn" style="background: #f59e0b; color: white; margin: 0;">🗑️ Limpiar Conteos</button>
+                    </div>
+                </div>
+                
+                <div id="productsList"></div>
+            </div>
+            <div id="finishSection" class="fixed-bottom">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <button id="finishBtn" class="btn btn-success" style="padding: 1rem; font-size: 1.125rem;">
+                        ✅ Terminar Conteo
+                    </button>
+                    <button id="emailResultsBtn" class="btn" style="background: #2563eb; color: white; padding: 1rem; font-size: 1.125rem;" disabled>
+                        📧 Enviar Resultados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let isAdmin = false;
+        let currentSupplier = null;
+        let inventoryCounts = {};
+        let previewData = [];
+        let adminPassword = 'admin123'; // Contraseña por defecto
+        
+        // Datos de ejemplo iniciales
+        let suppliers = [
+            { 
+                id: 'prov1', 
+                name: 'Distribuidora San Juan', 
+                type: 'individual'
+            },
+            { 
+                id: 'prov2', 
+                name: 'COCA COLA', 
+                type: 'package',
+                packageSize: 24
+            }
+        ];
+
+        let products = {
+            'prov1': [
+                {
+                    id: 'prod1',
+                    name: 'Leche Alpura 1L',
+                    barcode: '7501199100032',
+                    maxStock: 30,
+                    type: 'individual'
+                },
+                {
+                    id: 'prod1b',
+                    name: 'Pan Bimbo Grande',
+                    barcode: '7501000100032',
+                    maxStock: 25,
+                    type: 'individual'
+                }
+            ],
+            'prov2': [
+                {
+                    id: 'prod2',
+                    name: 'Coca Cola 600ml',
+                    barcode: '7501055365050',
+                    maxStock: 240,
+                    type: 'package',
+                    packageSize: 24
+                },
+                {
+                    id: 'prod2b',
+                    name: 'Sprite 600ml',
+                    barcode: '7501055365060',
+                    maxStock: 120,
+                    type: 'package',
+                    packageSize: 24
+                }
+            ]
+        };
+
+        // Funciones de cálculo
+        function calculateOrder(product, currentCount) {
+            const needed = Math.max(0, product.maxStock - currentCount);
+            
+            if (product.type === 'package' && product.packageSize) {
+                // Producto por PAQUETES
+                const packagesNeeded = Math.ceil(needed / product.packageSize);
+                const totalUnitsWithPackages = currentCount + (packagesNeeded * product.packageSize);
+                const excess = Math.max(0, totalUnitsWithPackages - product.maxStock);
+                
+                // Regla del 40% - Si el exceso es mayor al 40% del paquete, reducir un paquete
+                const maxAllowedExcess = Math.floor(product.packageSize * 0.4);
+                let finalPackagesNeeded = packagesNeeded;
+                let finalExcess = excess;
+                let adjustedBy40Rule = false;
+                
+                if (excess > maxAllowedExcess && packagesNeeded > 0) {
+                    finalPackagesNeeded = Math.max(0, packagesNeeded - 1);
+                    const newTotalUnits = currentCount + (finalPackagesNeeded * product.packageSize);
+                    finalExcess = 0;
+                    adjustedBy40Rule = true;
+                    
+                    const adjustedNeeded = Math.max(0, product.maxStock - newTotalUnits);
+                    
+                    return {
+                        needed: adjustedNeeded,
+                        packagesNeeded: finalPackagesNeeded,
+                        totalUnits: newTotalUnits,
+                        excess: finalExcess,
+                        adjustedBy40Rule,
+                        orderUnit: 'paquetes',
+                        orderQuantity: finalPackagesNeeded,
+                        unitsPerPackage: product.packageSize
+                    };
+                }
+                
+                return {
+                    needed,
+                    packagesNeeded: finalPackagesNeeded,
+                    totalUnits: totalUnitsWithPackages,
+                    excess: finalExcess,
+                    adjustedBy40Rule,
+                    orderUnit: 'paquetes',
+                    orderQuantity: finalPackagesNeeded,
+                    unitsPerPackage: product.packageSize
+                };
+            } else {
+                // Producto INDIVIDUAL
+                return { 
+                    needed, 
+                    packagesNeeded: needed, 
+                    totalUnits: currentCount + needed, 
+                    excess: 0,
+                    adjustedBy40Rule: false,
+                    orderUnit: 'unidades',
+                    orderQuantity: needed,
+                    unitsPerPackage: 1
+                };
+            }
+        }
+
+        // Función para determinar el tipo de proveedor
+        function determineSupplierType(items) {
+            const itemsToCheck = items.map(item => ({
+                type: item.type || (item.packageSize && item.packageSize > 1 ? 'package' : 'individual')
+            }));
+            
+            const hasPackages = itemsToCheck.some(item => item.type === 'package');
+            const hasIndividuals = itemsToCheck.some(item => item.type === 'individual');
+            
+            if (hasPackages && hasIndividuals) {
+                return 'mixto';
+            } else if (hasPackages) {
+                return 'package';
+            } else {
+                return 'individual';
+            }
+        }
+
+        // Navegación entre pantallas
+        function showScreen(screenId) {
+            document.querySelectorAll('#app > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function updateManagementInfo() {
+            const supplierCount = suppliers.length;
+            const productCount = Object.values(products).flat().length;
+            
+            document.getElementById('supplierCount').textContent = supplierCount;
+            document.getElementById('productCount').textContent = productCount;
+        }
+
+        // Cargar proveedores
+        function loadSuppliers() {
+            const container = document.getElementById('suppliersList');
+            container.innerHTML = '';
+            
+            if (suppliers.length === 0) {
+                container.innerHTML = `
+                    <div class="card text-center" style="padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                        <h3 style="margin-bottom: 0.5rem;">No hay proveedores disponibles</h3>
+                        <p style="color: #6b7280;">El administrador debe importar productos primero</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            suppliers.forEach(supplier => {
+                const productCount = products[supplier.id] ? products[supplier.id].length : 0;
+                const countedProducts = getCountedProductsForSupplier(supplier.id);
+                
+                const div = document.createElement('div');
+                div.className = 'supplier-card';
+                div.innerHTML = `
+                    <div class="flex justify-between">
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${supplier.name}</h3>
+                            <div class="flex" style="gap: 0.5rem; flex-wrap: wrap;">
+                                <span class="badge badge-blue">${productCount} productos</span>
+                                ${countedProducts > 0 ? `<span class="badge badge-green">${countedProducts} contados</span>` : ''}
+                                
+                                ${supplier.type === 'individual' ? 
+                                    '<span class="badge" style="background: #dcfce7; color: #166534;">🔸 INDIVIDUAL</span>' :
+                                    supplier.type === 'package' ?
+                                    '<span class="badge" style="background: #f3e8ff; color: #7c3aed;">📦 PAQUETE</span>' :
+                                    '<span class="badge" style="background: #fef3c7; color: #92400e;">🔄 MIXTO</span>'
+                                }
+                            </div>
+                        </div>
+                        <div style="font-size: 2rem;">📦</div>
+                    </div>
+                `;
+                div.addEventListener('click', () => {
+                    currentSupplier = supplier;
+                    loadCountingScreen();
+                });
+                container.appendChild(div);
+            });
+        }
+
+        // Función para obtener productos contados por proveedor
+        function getCountedProductsForSupplier(supplierId) {
+            const supplierProducts = products[supplierId] || [];
+            return supplierProducts.filter(product => 
+                inventoryCounts[product.id] !== undefined
+            ).length;
+        }
+
+        // Funciones de administración
+        function parseImportData(rawData) {
+            const lines = rawData.trim().split('\n');
+            const parsedData = [];
+            const errors = [];
+            
+            lines.forEach((line, index) => {
+                const lineNumber = index + 1;
+                line = line.trim();
+                if (!line) return;
+                
+                // Separar por tabs primero, luego por espacios múltiples
+                let columns = line.split('\t');
+                if (columns.length < 5) {
+                    columns = line.split(/\s{2,}/);
+                }
+                if (columns.length < 5) {
+                    columns = line.split(/\s+/);
+                }
+                
+                if (columns.length < 5) {
+                    errors.push(`Línea ${lineNumber}: Faltan columnas (mínimo 5 requeridas)`);
+                    return;
+                }
+                
+                // Detectar formato nuevo (6 columnas) vs anterior (5 columnas)
+                const isNewFormat = columns.length >= 6;
+                let supplier, productName, maxStock, barcode, packageInfo, typeInfo;
+                
+                if (isNewFormat) {
+                    [supplier, productName, maxStock, barcode, packageInfo, typeInfo] = columns.map(col => col.trim());
+                } else {
+                    [supplier, productName, maxStock, barcode, packageInfo] = columns.map(col => col.trim());
+                    typeInfo = null;
+                }
+                
+                // Validaciones
+                if (!supplier || !productName) {
+                    errors.push(`Línea ${lineNumber}: Proveedor o producto vacío`);
+                    return;
+                }
+                
+                const maxStockNum = parseInt(maxStock);
+                if (isNaN(maxStockNum) || maxStockNum <= 0) {
+                    errors.push(`Línea ${lineNumber}: Max Stock inválido`);
+                    return;
+                }
+                
+                // Determinar tipo y tamaño del paquete
+                let packageSize = 1;
+                let type = 'individual';
+                
+                if (isNewFormat && typeInfo) {
+                    // Formato nuevo: usar columna TIPO explícita
+                    const typeValue = typeInfo.toLowerCase().trim();
+                    
+                    if (typeValue.includes('paquete') || typeValue.includes('package') || typeValue.includes('pack')) {
+                        type = 'package';
+                        const size = parseInt(packageInfo);
+                        if (size > 1 && size <= 1000) {
+                            packageSize = size;
+                        } else {
+                            type = 'individual';
+                            packageSize = 1;
+                        }
+                    } else if (typeValue.includes('individual') || typeValue.includes('unidad')) {
+                        type = 'individual';
+                        packageSize = 1;
+                    }
+                } else if (packageInfo && packageInfo.trim()) {
+                    // Formato anterior: inferir tipo de la columna packageInfo
+                    const packageMatch = packageInfo.match(/(\d+)\s*(paquete|pack|pkg|paq)/i);
+                    const unitsMatch = packageInfo.match(/(\d+)\s*(unidades|unidad|u|un)/i);
+                    
+                    if (packageMatch) {
+                        packageSize = parseInt(packageMatch[1]);
+                        type = 'package';
+                    } else if (unitsMatch && parseInt(unitsMatch[1]) > 1) {
+                        packageSize = parseInt(unitsMatch[1]);
+                        type = 'package';
+                    }
+                    
+                    // Verificar si el tamaño del paquete es válido
+                    if (type === 'package' && (packageSize <= 1 || packageSize > 1000)) {
+                        type = 'individual';
+                        packageSize = 1;
+                    }
+                }
+                
+                parsedData.push({
+                    supplier,
+                    productName,
+                    maxStock: maxStockNum,
+                    barcode: barcode,
+                    packageSize,
+                    type,
+                    lineNumber
+                });
+            });
+            
+            return { data: parsedData, errors };
+        }
+
+        function generatePreview(data) {
+            const container = document.getElementById('previewContainer');
+            
+            if (data.errors.length > 0) {
+                container.innerHTML = `
+                    <div class="import-error">
+                        <h3>❌ Errores encontrados:</h3>
+                        <ul style="margin-left: 1rem;">
+                            ${data.errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                document.getElementById('saveBtn').disabled = true;
+            }
+            
+            if (data.data.length === 0) {
+                container.innerHTML = `<div class="import-error"><h3>⚠️ No se encontraron datos válidos</h3></div>`;
+                document.getElementById('saveBtn').disabled = true;
+                return;
+            }
+            
+            const supplierCount = new Set(data.data.map(item => item.supplier)).size;
+            const productCount = data.data.length;
+            
+            let html = `
+                <div class="import-stats">
+                    <h3 style="color: #059669; margin-bottom: 0.5rem;">✅ Vista Previa - Datos Válidos</h3>
+                    <div class="flex" style="gap: 1rem; margin-bottom: 1rem;">
+                        <span class="badge badge-blue">${supplierCount} proveedores</span>
+                        <span class="badge badge-green">${productCount} productos válidos</span>
+                        ${data.errors.length > 0 ? `<span class="badge" style="background: #fef2f2; color: #dc2626;">${data.errors.length} errores</span>` : ''}
+                    </div>
+                </div>
+                
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Producto</th>
+                                <th>Max Stock</th>
+                                <th>Código</th>
+                                <th>Unidades/Paq</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.data.map(item => `
+                                <tr>
+                                    <td><strong>${item.supplier}</strong></td>
+                                    <td>${item.productName}</td>
+                                    <td style="text-align: center;">${item.maxStock}</td>
+                                    <td style="font-family: monospace;">${item.barcode}</td>
+                                    <td style="text-align: center; font-weight: bold;">${item.packageSize}</td>
+                                    <td>
+                                        <span class="badge ${item.type === 'package' ? 'badge-blue' : 'badge-green'}">
+                                            ${item.type === 'package' ? `📦 PAQUETE` : '🔸 INDIVIDUAL'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            document.getElementById('saveBtn').disabled = data.errors.length > 0;
+        }
+
+        function saveImportedData(data) {
+            // Crear nuevos proveedores
+            let supplierIdCounter = suppliers.length + 1;
+            let productIdCounter = Object.values(products).flat().length + 1;
+            
+            const supplierMap = new Map();
+            data.data.forEach(item => {
+                if (!supplierMap.has(item.supplier)) {
+                    supplierMap.set(item.supplier, []);
+                }
+                supplierMap.get(item.supplier).push(item);
+            });
+            
+            let addedSuppliers = 0;
+            let addedProducts = 0;
+            
+            supplierMap.forEach((items, supplierName) => {
+                const supplierId = `supplier_${supplierIdCounter++}`;
+                const supplierType = determineSupplierType(items);
+                
+                const packageProducts = items.filter(item => item.type === 'package');
+                const avgPackageSize = packageProducts.length > 0 ? 
+                    Math.round(packageProducts.reduce((sum, item) => sum + item.packageSize, 0) / packageProducts.length) : 1;
+                
+                const newSupplier = {
+                    id: supplierId,
+                    name: supplierName,
+                    type: supplierType,
+                    packageSize: supplierType !== 'individual' ? avgPackageSize : undefined
+                };
+                
+                suppliers.push(newSupplier);
+                addedSuppliers++;
+                
+                const supplierProducts = items.map(item => ({
+                    id: `product_${productIdCounter++}`,
+                    name: item.productName,
+                    barcode: item.barcode,
+                    maxStock: item.maxStock,
+                    type: item.type,
+                    packageSize: item.packageSize > 1 ? item.packageSize : undefined
+                }));
+                
+                products[supplierId] = supplierProducts;
+                addedProducts += supplierProducts.length;
+            });
+            
+            // Limpiar formulario
+            document.getElementById('importData').value = '';
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('saveBtn').disabled = true;
+            previewData = [];
+            
+            // Actualizar información
+            updateManagementInfo();
+            
+            alert(`✅ Datos guardados exitosamente!\n\n➕ ${addedSuppliers} proveedores nuevos\n🛍️ ${addedProducts} productos agregados\n\n📊 Total en sistema: ${suppliers.length} proveedores`);
+        }
+
+        // Cargar resultados
+        function loadResults() {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = '';
+            
+            let hasAnyResults = false;
+
+            suppliers.forEach(supplier => {
+                const supplierProducts = products[supplier.id] || [];
+                const countedProducts = supplierProducts.filter(product => 
+                    inventoryCounts[product.id] !== undefined
+                );
+                
+                if (countedProducts.length > 0) {
+                    hasAnyResults = true;
+                    const supplierDiv = document.createElement('div');
+                    supplierDiv.className = 'results-card';
+                    supplierDiv.id = `supplier-${supplier.id}`;
+                    
+                    let totalItemsToOrder = 0;
+                    let orderDetails = [];
+                    
+                    let productsHtml = '';
+                    
+                    supplierProducts.forEach(product => {
+                        const currentCount = parseInt(inventoryCounts[product.id]);
+                        const isCounted = inventoryCounts[product.id] !== undefined;
+                        
+                        if (isCounted) {
+                            const order = calculateOrder(product, currentCount);
+                            
+                            if (order.orderQuantity > 0) {
+                                totalItemsToOrder += order.orderQuantity;
+                                orderDetails.push({
+                                    name: product.name,
+                                    quantity: order.orderQuantity,
+                                    unit: order.orderUnit,
+                                    type: product.type,
+                                    unitsPerPackage: order.unitsPerPackage,
+                                    totalUnits: order.orderQuantity * order.unitsPerPackage
+                                });
+                            }
+                            
+                            productsHtml += `
+                                <div class="results-product has-count">
+                                    <div class="flex justify-between" style="margin-bottom: 0.75rem;">
+                                        <div style="flex: 1;">
+                                            <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">${product.name}</h4>
+                                            
+                                            <!-- CANTIDAD A PEDIR - MUY DESTACADA -->
+                                            ${order.orderQuantity > 0 ? `
+                                                <div style="background: linear-gradient(135deg, #059669, #047857); color: white; padding: 0.75rem 1rem; border-radius: 0.75rem; display: inline-block; margin-bottom: 0.75rem; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);">
+                                                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.25rem;">🛒 PEDIR:</div>
+                                                    <div style="font-size: 1.75rem; font-weight: bold; line-height: 1;">
+                                                        ${order.orderQuantity} ${order.orderUnit}
+                                                    </div>
+                                                    ${product.type === 'package' ? `
+                                                        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">
+                                                            = ${order.orderQuantity * order.unitsPerPackage} unidades totales
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            ` : `
+                                                <div style="background: linear-gradient(135deg, #059669, #047857); color: white; padding: 0.75rem 1rem; border-radius: 0.75rem; display: inline-block; margin-bottom: 0.75rem; opacity: 0.6;">
+                                                    <div style="font-size: 0.75rem; margin-bottom: 0.25rem;">✅ STOCK COMPLETO</div>
+                                                    <div style="font-size: 1.25rem; font-weight: bold;">
+                                                        No pedir
+                                                    </div>
+                                                </div>
+                                            `}
+                                        </div>
+                                        <div class="flex" style="gap: 0.5rem; align-items: flex-start;">
+                                            <span class="badge badge-green">✓ Contado</span>
+                                            <span class="badge ${product.type === 'package' ? 'badge' : 'badge'}" style="background: ${product.type === 'package' ? '#f3e8ff; color: #7c3aed' : '#dcfce7; color: #166534'};">
+                                                ${product.type === 'package' ? '📦' : '🔸'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Información detallada en grid más compacta -->
+                                    <div style="background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                                        <div class="grid grid-2" style="gap: 1rem; font-size: 0.875rem;">
+                                            <div style="text-align: center;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Físico</div>
+                                                <div style="font-size: 1.1rem; font-weight: bold; color: #2563eb;">${currentCount}</div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Max Stock</div>
+                                                <div style="font-size: 1.1rem; font-weight: bold;">${product.maxStock}</div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Faltan</div>
+                                                <div style="font-size: 1.1rem; font-weight: bold; color: #dc2626;">${order.needed}</div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Stock Final</div>
+                                                <div style="font-size: 1.1rem; font-weight: bold; color: #059669;">${order.totalUnits}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${order.excess > 0 ? `
+                                        <div style="margin-top: 0.5rem; padding: 0.5rem; background: #fef3c7; border-radius: 0.25rem; font-size: 0.875rem; color: #92400e;">
+                                            ⚠️ Exceso estimado: ${order.excess} unidades (${((order.excess / product.maxStock) * 100).toFixed(0)}%)
+                                        </div>
+                                    ` : ''}
+                                    ${order.adjustedBy40Rule ? `
+                                        <div style="margin-top: 0.5rem; padding: 0.5rem; background: #dbeafe; border-radius: 0.25rem; font-size: 0.875rem; color: #1e40af;">
+                                            🎯 Cantidad ajustada por regla del 40% (paquete de ${order.unitsPerPackage} unidades)
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        } else {
+                            productsHtml += `
+                                <div class="results-product no-count">
+                                    <div class="flex justify-between">
+                                        <h4 style="font-weight: 600;">${product.name}</h4>
+                                        <span class="badge badge-yellow">⏳ Pendiente</span>
+                                    </div>
+                                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">Producto no contado aún</p>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    // Crear resumen del pedido
+                    let orderSummaryHtml = '';
+                    if (orderDetails.length > 0) {
+                        orderSummaryHtml = `
+                            <div class="order-summary">
+                                <h4 style="font-weight: 600; margin-bottom: 0.75rem; color: #059669;">📋 Resumen del Pedido</h4>
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    ${orderDetails.map((item, index) => {
+                                        const bgColor = index % 2 === 0 ? '#ffffff' : '#f8fafc';
+                                        return `
+                                            <div class="order-item" style="background: ${bgColor}; border-radius: 0.25rem; margin-bottom: 0.25rem; padding: 0.75rem;">
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">${item.name}</div>
+                                                    ${item.type === 'package' ? `
+                                                        <div style="font-size: 0.75rem; color: #7c3aed;">
+                                                            ${item.quantity} paquetes × ${item.unitsPerPackage} = ${item.totalUnits} unidades
+                                                        </div>
+                                                    ` : `
+                                                        <div style="font-size: 0.75rem; color: #166534;">
+                                                            ${item.quantity} unidades individuales
+                                                        </div>
+                                                    `}
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="font-weight: bold; font-size: 1.1rem; color: #059669;">${item.quantity}</div>
+                                                    <div style="font-size: 0.75rem; color: #6b7280;">${item.unit}</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                                <div class="order-total" style="margin-top: 1rem;">
+                                    🛒 Total del Pedido: ${totalItemsToOrder} artículos
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        orderSummaryHtml = `
+                            <div style="background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; text-align: center;">
+                                <div style="color: #059669; font-weight: 600;">✅ Stock Completo</div>
+                                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">No se requieren pedidos para este proveedor</div>
+                            </div>
+                        `;
+                    }
+                    
+                    supplierDiv.innerHTML = `
+                        <div class="results-header" onclick="toggleResultsProvider('${supplier.id}')">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem;">${supplier.name}</h3>
+                                    <div class="flex" style="gap: 0.5rem;">
+                                        <span class="badge badge-blue">${supplierProducts.length} productos</span>
+                                        <span class="badge badge-green">${countedProducts.length} contados</span>
+                                        ${countedProducts.length < supplierProducts.length ? 
+                                            `<span class="badge badge-yellow">${supplierProducts.length - countedProducts.length} pendientes</span>` : 
+                                            '<span class="badge badge-green">✅ Completo</span>'
+                                        }
+                                    </div>
+                                </div>
+                                <div style="font-size: 2rem;">
+                                    <span class="expand-icon" id="results-indicator-${supplier.id}">⌄</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="results-content hidden" id="results-content-${supplier.id}">
+                            ${productsHtml}
+                            ${orderSummaryHtml}
+                        </div>
+                    `;
+                    
+                    container.appendChild(supplierDiv);
+                }
+            });
+            
+            if (!hasAnyResults) {
+                container.innerHTML = `
+                    <div class="card text-center" style="padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                        <h3 style="margin-bottom: 0.5rem;">No hay conteos realizados</h3>
+                        <p style="color: #6b7280;">Comienza contando productos para ver los resultados aquí</p>
+                        <button id="startCountingBtn" class="btn btn-primary" style="margin-top: 1rem;">
+                            Comenzar Conteo
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('startCountingBtn')?.addEventListener('click', () => {
+                    document.getElementById('countingTab').click();
+                });
+            }
+        }
+
+        // Función para toggle de proveedores en resultados
+        window.toggleResultsProvider = function(supplierId) {
+            const card = document.getElementById(`supplier-${supplierId}`);
+            const content = document.getElementById(`results-content-${supplierId}`);
+            const indicator = document.getElementById(`results-indicator-${supplierId}`);
+            
+            if (!card || !content || !indicator) {
+                console.error('Elementos no encontrados para proveedor en resultados:', supplierId);
+                return;
+            }
+            
+            const isExpanded = !content.classList.contains('hidden');
+            
+            if (isExpanded) {
+                // Contraer
+                content.classList.add('hidden');
+                indicator.classList.remove('rotated');
+                card.classList.remove('expanded');
+            } else {
+                // Expandir
+                content.classList.remove('hidden');
+                indicator.classList.add('rotated');
+                card.classList.add('expanded');
+            }
+        };
+
+        // Pantalla de conteo
+        function loadCountingScreen() {
+            document.getElementById('supplierName').textContent = currentSupplier.name;
+            document.getElementById('currentUser').textContent = `📋 ${currentUser}`;
+            
+            const supplierProducts = products[currentSupplier.id] || [];
+            loadProducts(supplierProducts);
+            updateProgress();
+            showScreen('countingScreen');
+        }
+
+        function loadProducts(supplierProducts) {
+            const container = document.getElementById('productsList');
+            container.innerHTML = '';
+            
+            supplierProducts.forEach((product, index) => {
+                const div = document.createElement('div');
+                div.className = 'card product-card';
+                div.id = `product-${product.id}`;
+                
+                const currentCount = parseInt(inventoryCounts[product.id]) || 0;
+                const order = calculateOrder(product, currentCount);
+                const isCounted = inventoryCounts[product.id] !== undefined;
+                
+                if (isCounted) {
+                    div.classList.add('counted');
+                }
+                
+                div.innerHTML = `
+                    <div class="flex justify-between" style="margin-bottom: 1rem;">
+                        <div style="flex: 1;">
+                            <h3 style="font-weight: 600; margin-bottom: 0.5rem;">
+                                ${product.name}
+                                <span style="color: #2563eb; font-size: 0.75rem; margin-left: 0.5rem;">(${index + 1}/${supplierProducts.length})</span>
+                            </h3>
+                            <div class="flex" style="gap: 0.5rem; flex-wrap: wrap;">
+                                <span class="badge badge-blue">Max: ${product.maxStock}</span>
+                                ${product.barcode ? `<span class="badge" style="background: #f3f4f6; color: #374151;">📊 ${product.barcode}</span>` : ''}
+                                
+                                ${product.type === 'package' && product.packageSize ? 
+                                    `<span class="badge" style="background: #f3e8ff; color: #7c3aed;">📦 ${product.packageSize}u/paq</span>` : 
+                                    '<span class="badge" style="background: #dcfce7; color: #166534;">🔸 Individual</span>'
+                                }
+                            </div>
+                        </div>
+                        ${isCounted ? '<div style="color: #059669; font-size: 1.5rem;">✓</div>' : ''}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; text-align: center; margin-bottom: 0.5rem; font-weight: 600;">
+                            Conteo Físico - Escribe y presiona ENTER →
+                        </label>
+                        <div class="flex justify-center">
+                            <button class="count-button minus" data-product="${product.id}" data-action="decrease">−</button>
+                            <input type="tel" id="input-${product.id}" class="count-input" value="${currentCount}" 
+                                   data-product="${product.id}" placeholder="0" autocomplete="off">
+                            <button class="count-button plus" data-product="${product.id}" data-action="increase">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-2" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem;">
+                        <div class="text-center">
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Faltan</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #dc2626;">${order.needed}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">unidades</div>
+                        </div>
+                        <div class="text-center">
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Pedir</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #059669;">${order.orderQuantity}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">${order.orderUnit}</div>
+                            ${product.type === 'package' && order.orderQuantity > 0 ? `
+                                <div style="font-size: 0.75rem; color: #7c3aed; margin-top: 0.25rem;">
+                                    = ${order.orderQuantity * order.unitsPerPackage} unidades
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${order.excess > 0 ? `
+                            <div class="text-center" style="grid-column: 1 / -1; margin-top: 0.5rem;">
+                                <div style="font-size: 0.75rem; color: #f59e0b;">
+                                    ⚠️ Exceso: ${order.excess} (${((order.excess / product.maxStock) * 100).toFixed(0)}%)
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${order.adjustedBy40Rule ? `
+                            <div class="text-center" style="grid-column: 1 / -1; margin-top: 0.5rem;">
+                                <div style="font-size: 0.75rem; color: #2563eb; background: #dbeafe; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                    🎯 Ajustado por regla 40%
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+            
+            // Agregar event listeners
+            addCountingEventListeners(supplierProducts);
+        }
+
+        function addCountingEventListeners(supplierProducts) {
+            // Event listeners para inputs
+            supplierProducts.forEach((product, index) => {
+                const input = document.getElementById(`input-${product.id}`);
+                
+                input.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/[^0-9]/g, '');
+                    e.target.value = value;
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        
+                        // Guardar valor actual
+                        const value = e.target.value || '0';
+                        inventoryCounts[product.id] = value;
+                        
+                        // Actualizar display
+                        updateProductDisplay(product);
+                        updateProgress();
+                        
+                        // Navegar al siguiente
+                        setTimeout(() => {
+                            if (index < supplierProducts.length - 1) {
+                                const nextProduct = supplierProducts[index + 1];
+                                const nextInput = document.getElementById(`input-${nextProduct.id}`);
+                                nextInput.focus();
+                                nextInput.select();
+                            } else {
+                                document.getElementById('finishBtn').focus();
+                            }
+                        }, 50);
+                    }
+                });
+
+                input.addEventListener('blur', (e) => {
+                    const value = e.target.value || '0';
+                    inventoryCounts[product.id] = value;
+                    updateProductDisplay(product);
+                    updateProgress();
+                });
+            });
+            
+            // Event listeners para botones + y -
+            let holdInterval;
+            
+            document.querySelectorAll('.count-button').forEach(button => {
+                const productId = button.dataset.product;
+                const isIncrease = button.dataset.action === 'increase';
+                
+                const updateCount = () => {
+                    const current = parseInt(inventoryCounts[productId]) || 0;
+                    const newValue = isIncrease ? current + 1 : Math.max(0, current - 1);
+                    inventoryCounts[productId] = newValue.toString();
+                    
+                    const input = document.getElementById(`input-${productId}`);
+                    input.value = newValue;
+                    
+                    const product = supplierProducts.find(p => p.id === productId);
+                    updateProductDisplay(product);
+                    updateProgress();
+                };
+                
+                button.addEventListener('click', updateCount);
+                
+                // Hold functionality
+                button.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    updateCount();
+                    setTimeout(() => {
+                        holdInterval = setInterval(updateCount, 120);
+                    }, 500);
+                });
+                
+                button.addEventListener('mouseup', () => {
+                    clearInterval(holdInterval);
+                });
+                
+                button.addEventListener('mouseleave', () => {
+                    clearInterval(holdInterval);
+                });
+                
+                // Touch events for mobile
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    updateCount();
+                    setTimeout(() => {
+                        holdInterval = setInterval(updateCount, 120);
+                    }, 500);
+                });
+                
+                button.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    clearInterval(holdInterval);
+                });
+            });
+        }
+
+        function updateProductDisplay(product) {
+            const currentCount = parseInt(inventoryCounts[product.id]) || 0;
+            const order = calculateOrder(product, currentCount);
+            const productDiv = document.getElementById(`product-${product.id}`);
+            
+            // Actualizar clase counted
+            if (inventoryCounts[product.id] !== undefined) {
+                productDiv.classList.add('counted');
+            } else {
+                productDiv.classList.remove('counted');
+            }
+            
+            // Actualizar los valores en la grid
+            const grids = productDiv.querySelectorAll('.grid.grid-2 > div');
+            if (grids.length >= 2) {
+                grids[0].innerHTML = `
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Faltan</div>
+                    <div style="font-size: 1.25rem; font-weight: bold; color: #dc2626;">${order.needed}</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">unidades</div>
+                `;
+                grids[1].innerHTML = `
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Pedir</div>
+                    <div style="font-size: 1.25rem; font-weight: bold; color: #059669;">${order.orderQuantity}</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">${order.orderUnit}</div>
+                    ${product.type === 'package' && order.orderQuantity > 0 ? `
+                        <div style="font-size: 0.75rem; color: #7c3aed; margin-top: 0.25rem;">
+                            = ${order.orderQuantity * order.unitsPerPackage} unidades
+                        </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        function updateProgress() {
+            const supplierProducts = products[currentSupplier.id] || [];
+            const countedProducts = supplierProducts.filter(product => 
+                inventoryCounts[product.id] !== undefined
+            ).length;
+            const pendingProducts = supplierProducts.length - countedProducts;
+            const allCounted = pendingProducts === 0;
+            
+            document.getElementById('progressInfo').innerHTML = `
+                <div class="flex justify-between">
+                    <span><strong>Progreso:</strong> ${countedProducts}/${supplierProducts.length} productos</span>
+                    <span class="badge ${allCounted ? 'badge-green' : 'badge-yellow'}">
+                        ${allCounted ? '✅ Completo' : `⏳ Faltan ${pendingProducts}`}
+                    </span>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+                    ⚡ <strong>Tip:</strong> Presiona ENTER para navegar rápidamente | Mantén presionados los botones +/- para conteo rápido
+                </div>
+            `;
+            
+            const finishBtn = document.getElementById('finishBtn');
+            const emailBtn = document.getElementById('emailResultsBtn');
+            
+            if (allCounted) {
+                finishBtn.className = 'btn btn-success';
+                finishBtn.textContent = '✅ Terminar Conteo';
+                finishBtn.disabled = false;
+                emailBtn.disabled = false;
+            } else {
+                finishBtn.className = 'btn';
+                finishBtn.style.background = '#9ca3af';
+                finishBtn.style.color = '#6b7280';
+                finishBtn.textContent = `⏳ Faltan ${pendingProducts}`;
+                finishBtn.disabled = true;
+                emailBtn.disabled = true;
+            }
+        }
+
+        // Funciones para exportar/importar sistema completo
+        function exportSystemData() {
+            const systemData = {
+                version: "1.0",
+                exportDate: new Date().toISOString(),
+                suppliers: suppliers,
+                products: products,
+                adminPassword: adminPassword, // Incluir contraseña en exportación
+                metadata: {
+                    totalSuppliers: suppliers.length,
+                    totalProducts: Object.values(products).flat().length,
+                    exportedBy: currentUser || "Admin"
+                }
+            };
+            return JSON.stringify(systemData, null, 2);
+        }
+
+        function generateSystemShareText() {
+            const totalProducts = Object.values(products).flat().length;
+            const systemData = exportSystemData();
+            
+            return `📦 LÍDER MARKET - Sistema de Inventario
+
+🏪 Sistema exportado con:
+• ${suppliers.length} proveedores configurados
+• ${totalProducts} productos cargados
+• Exportado: ${new Date().toLocaleString('es-MX')}
+
+📋 INSTRUCCIONES DE USO:
+1. Abre el archivo HTML de LÍDER MARKET
+2. Inicia sesión como Admin con la contraseña proporcionada
+3. Ve a "Gestión de Datos" > "Importar Sistema Completo"
+4. Copia y pega los datos de abajo
+5. Haz clic en "Importar Sistema"
+
+🔐 NOTA: La contraseña de administrador está incluida en los datos del sistema.
+
+🔗 DATOS DEL SISTEMA:
+${systemData}
+
+✅ Una vez importado, podrás usar la aplicación en modo Usuario para hacer conteos con todos los productos ya configurados.
+
+💡 Desarrollado para LÍDER MARKET`;
+        }
+
+        function importSystemData(jsonData) {
+            try {
+                const systemData = JSON.parse(jsonData);
+                
+                // Validar estructura
+                if (!systemData.suppliers || !systemData.products) {
+                    throw new Error("Formato de datos inválido");
+                }
+                
+                // Limpiar datos actuales
+                suppliers.length = 0;
+                Object.keys(products).forEach(key => delete products[key]);
+                inventoryCounts = {};
+                
+                // Importar nuevos datos
+                systemData.suppliers.forEach(supplier => suppliers.push(supplier));
+                Object.assign(products, systemData.products);
+                
+                // Importar contraseña si viene en los datos
+                if (systemData.adminPassword) {
+                    adminPassword = systemData.adminPassword;
+                }
+                
+                updateManagementInfo();
+                
+                const totalProducts = Object.values(products).flat().length;
+                const passwordNote = systemData.adminPassword ? '\n🔐 Contraseña de admin importada' : '';
+                alert(`✅ Sistema importado exitosamente!\n\n📦 ${suppliers.length} proveedores\n🛍️ ${totalProducts} productos${passwordNote}\n\n🎯 Fecha de exportación: ${systemData.exportDate ? new Date(systemData.exportDate).toLocaleString('es-MX') : 'No disponible'}`);
+                
+            } catch (error) {
+                alert(`❌ Error al importar datos:\n\n${error.message}\n\n💡 Verifica que los datos estén completos y en formato correcto.`);
+            }
+        }
+
+        // Función para cambiar contraseña
+        function changeAdminPassword() {
+            const currentPasswordInput = document.getElementById('currentPassword').value;
+            const newPasswordInput = document.getElementById('newPassword').value;
+            const confirmPasswordInput = document.getElementById('confirmPassword').value;
+            
+            // Validaciones
+            if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
+                alert('⚠️ Todos los campos son obligatorios');
+                return;
+            }
+            
+            if (currentPasswordInput !== adminPassword) {
+                alert('❌ La contraseña actual es incorrecta');
+                document.getElementById('currentPassword').focus();
+                return;
+            }
+            
+            if (newPasswordInput.length < 4) {
+                alert('⚠️ La nueva contraseña debe tener al menos 4 caracteres');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+            
+            if (newPasswordInput !== confirmPasswordInput) {
+                alert('❌ Las contraseñas nuevas no coinciden');
+                document.getElementById('confirmPassword').focus();
+                return;
+            }
+            
+            if (newPasswordInput === currentPasswordInput) {
+                alert('⚠️ La nueva contraseña debe ser diferente a la actual');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+            
+            // Cambiar contraseña
+            adminPassword = newPasswordInput;
+            
+            // Limpiar campos
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            alert(`✅ Contraseña cambiada exitosamente!\n\n🔐 Nueva contraseña: ${newPasswordInput}\n\n💡 Anota tu nueva contraseña en un lugar seguro.`);
+        }
+
+        function generateCountingReport() {
+            if (!currentSupplier) return null;
+            
+            const supplierProducts = products[currentSupplier.id] || [];
+            const countedProducts = supplierProducts.filter(product => 
+                inventoryCounts[product.id] !== undefined
+            );
+            
+            let report = `📋 REPORTE DE CONTEO - LÍDER MARKET\n`;
+            report += `${'='.repeat(50)}\n\n`;
+            report += `🏪 Proveedor: ${currentSupplier.name}\n`;
+            report += `👤 Usuario: ${currentUser}\n`;
+            report += `📅 Fecha: ${new Date().toLocaleString('es-MX')}\n`;
+            report += `📦 Productos: ${countedProducts.length}/${supplierProducts.length}\n\n`;
+            
+            if (countedProducts.length === 0) {
+                report += `⚠️ No hay productos contados aún.\n`;
+                return report;
+            }
+            
+            let totalItemsToOrder = 0;
+            let orderDetails = [];
+            
+            report += `🛒 RESUMEN DE PEDIDO\n`;
+            report += `${'-'.repeat(30)}\n`;
+            
+            supplierProducts.forEach(product => {
+                const currentCount = parseInt(inventoryCounts[product.id]);
+                const isCounted = inventoryCounts[product.id] !== undefined;
+                
+                if (isCounted) {
+                    const order = calculateOrder(product, currentCount);
+                    
+                    if (order.orderQuantity > 0) {
+                        totalItemsToOrder += order.orderQuantity;
+                        orderDetails.push({
+                            name: product.name,
+                            quantity: order.orderQuantity,
+                            unit: order.orderUnit,
+                            totalUnits: order.orderQuantity * order.unitsPerPackage
+                        });
+                        
+                        report += `• ${product.name}: ${order.orderQuantity} ${order.orderUnit}`;
+                        if (product.type === 'package') {
+                            report += ` (${order.orderQuantity * order.unitsPerPackage} unidades)`;
+                        }
+                        report += `\n`;
+                    }
+                    
+                    // Agregar detalles del producto
+                    report += `  📊 Físico: ${currentCount} | Max: ${product.maxStock} | Faltan: ${order.needed}\n`;
+                    if (order.excess > 0) {
+                        report += `  ⚠️ Exceso estimado: ${order.excess} unidades\n`;
+                    }
+                    if (order.adjustedBy40Rule) {
+                        report += `  🎯 Ajustado por regla 40%\n`;
+                    }
+                    report += `\n`;
+                }
+            });
+            
+            if (totalItemsToOrder > 0) {
+                report += `\n📊 TOTAL A PEDIR: ${totalItemsToOrder} artículos\n\n`;
+            } else {
+                report += `\n✅ STOCK COMPLETO - No se requieren pedidos\n\n`;
+            }
+            
+            report += `${'='.repeat(50)}\n`;
+            report += `📱 Generado por LÍDER MARKET - Sistema de Control de Inventario`;
+            
+            return report;
+        }
+
+        // Event listeners para login
+        document.getElementById('userTab').addEventListener('click', () => {
+            document.getElementById('userTab').style.background = '#2563eb';
+            document.getElementById('userTab').style.color = 'white';
+            document.getElementById('adminTab').style.background = 'transparent';
+            document.getElementById('adminTab').style.color = '#6b7280';
+            document.getElementById('passwordField').classList.add('hidden');
+        });
+
+        document.getElementById('adminTab').addEventListener('click', () => {
+            document.getElementById('adminTab').style.background = '#f59e0b';
+            document.getElementById('adminTab').style.color = 'white';
+            document.getElementById('userTab').style.background = 'transparent';
+            document.getElementById('userTab').style.color = '#6b7280';
+            document.getElementById('passwordField').classList.remove('hidden');
+        });
+
+        // Función para hacer login
+        function performLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const isAdminLogin = !document.getElementById('passwordField').classList.contains('hidden');
+            
+            if (!username) {
+                alert('Ingrese su nombre');
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            if (isAdminLogin && password !== adminPassword) {
+                alert('Contraseña incorrecta');
+                document.getElementById('password').focus();
+                return;
+            }
+            
+            currentUser = username;
+            isAdmin = isAdminLogin;
+            
+            if (isAdmin) {
+                updateManagementInfo();
+                showScreen('adminDashboard');
+            } else {
+                document.getElementById('welcomeUser').textContent = `👋 Hola, ${username}`;
+                loadSuppliers();
+                showScreen('userDashboard');
+            }
+        }
+
+        // Event listeners con navegación por Enter
+        document.getElementById('username').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const isAdminMode = !document.getElementById('passwordField').classList.contains('hidden');
+                
+                if (isAdminMode) {
+                    // Si es modo admin, ir al campo de contraseña
+                    const passwordField = document.getElementById('password');
+                    passwordField.focus();
+                } else {
+                    // Si es modo usuario, hacer login directamente
+                    performLogin();
+                }
+            }
+        });
+
+        document.getElementById('password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performLogin();
+            }
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', performLogin);
+
+        // Event listeners para logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            currentUser = null;
+            isAdmin = false;
+            currentSupplier = null;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            showScreen('loginScreen');
+        });
+
+        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            showScreen('loginScreen');
+        });
+
+        // Event listeners para pestañas del dashboard de usuario
+        document.getElementById('countingTab').addEventListener('click', () => {
+            document.getElementById('countingTab').style.background = '#2563eb';
+            document.getElementById('countingTab').style.color = 'white';
+            document.getElementById('resultsTab').style.background = 'transparent';
+            document.getElementById('resultsTab').style.color = '#6b7280';
+            
+            document.getElementById('countingSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+        });
+
+        document.getElementById('resultsTab').addEventListener('click', () => {
+            document.getElementById('resultsTab').style.background = '#059669';
+            document.getElementById('resultsTab').style.color = 'white';
+            document.getElementById('countingTab').style.background = 'transparent';
+            document.getElementById('countingTab').style.color = '#6b7280';
+            
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('countingSection').classList.add('hidden');
+            
+            loadResults();
+        });
+
+        // Event listeners para admin
+        document.getElementById('previewBtn').addEventListener('click', () => {
+            const rawData = document.getElementById('importData').value;
+            
+            if (!rawData.trim()) {
+                alert('⚠️ Ingrese datos para procesar');
+                return;
+            }
+            
+            previewData = parseImportData(rawData);
+            generatePreview(previewData);
+            document.getElementById('previewContainer').classList.remove('hidden');
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            if (!previewData || !previewData.data || previewData.data.length === 0) {
+                alert('⚠️ No hay datos válidos para guardar. Haga vista previa primero.');
+                return;
+            }
+            
+            const confirmMessage = `¿Guardar ${previewData.data.length} productos de ${new Set(previewData.data.map(item => item.supplier)).size} proveedores?`;
+            
+            if (confirm(confirmMessage)) {
+                saveImportedData(previewData);
+            }
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('¿Limpiar el área de importación?')) {
+                document.getElementById('importData').value = '';
+                document.getElementById('previewContainer').classList.add('hidden');
+                document.getElementById('saveBtn').disabled = true;
+                previewData = [];
+            }
+        });
+
+        document.getElementById('loadExampleBtn').addEventListener('click', () => {
+            const exampleData = `Coca-Cola	Coca Cola 600ml	240	7501055365050	24	PAQUETE
+Coca-Cola	Sprite 600ml	120	7501055365060	24	PAQUETE
+Coca-Cola	Fanta Naranja 600ml	100	7501055365070	24	PAQUETE
+Panadería Local	Bolillo	100	BOLILLO001	1	INDIVIDUAL
+Panadería Local	Pan Dulce	50	PANDULCE001	1	INDIVIDUAL
+Panadería Local	Concha	40	CONCHA001	1	INDIVIDUAL
+FEMSA	Cerveza Tecate 355ml	144	7501234567890	12	PAQUETE
+FEMSA	Agua Natural 1L	80	7501234567891	1	INDIVIDUAL
+FEMSA	Cerveza Corona 355ml	120	7501234567892	12	PAQUETE
+Distribuidora Mixta	Leche Alpura 1L	30	7501199100032	1	INDIVIDUAL
+Distribuidora Mixta	Refresco 6pack	60	7502222222222	6	PAQUETE
+Distribuidora Mixta	Pan Bimbo	25	7501000100032	1	INDIVIDUAL`;
+            
+            document.getElementById('importData').value = exampleData;
+            alert('✅ Datos de prueba cargados!\n\n🎯 Incluye ejemplos de:\n📦 PAQUETE: Coca-Cola, FEMSA\n🔸 INDIVIDUAL: Panadería\n🔄 MIXTO: Distribuidora Mixta\n\n▶️ Haz clic en "Vista Previa" para procesarlos.');
+        });
+
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            const totalProducts = Object.values(products).flat().length;
+            const confirmMessage = `¿Está seguro de eliminar TODOS los datos?\n\n📦 ${suppliers.length} proveedores\n🛍️ ${totalProducts} productos\n\n⚠️ Esta acción no se puede deshacer.`;
+            
+            if (confirm(confirmMessage)) {
+                if (confirm('⚠️ CONFIRMACIÓN FINAL:\n\n¿Realmente desea eliminar TODOS los datos del sistema?')) {
+                    suppliers.length = 0;
+                    Object.keys(products).forEach(key => delete products[key]);
+                    inventoryCounts = {};
+                    updateManagementInfo();
+                    alert('✅ Todos los datos han sido eliminados');
+                }
+            }
+        });
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            loadSuppliers();
+            showScreen('userDashboard');
+        });
+
+        document.getElementById('finishBtn').addEventListener('click', () => {
+            const supplierProducts = products[currentSupplier.id] || [];
+            const allCounted = supplierProducts.every(product => 
+                inventoryCounts[product.id] !== undefined
+            );
+            
+            if (allCounted) {
+                alert(`✅ Conteo completado para ${currentSupplier.name}!\n\nPuedes ver los resultados en la pestaña "Resultados"`);
+                loadSuppliers();
+                showScreen('userDashboard');
+            }
+        });
+
+        // Event listeners para nuevas funcionalidades
+
+        // Cambiar contraseña
+        document.getElementById('changePasswordBtn').addEventListener('click', changeAdminPassword);
+
+        // Navegación con Enter en campos de contraseña
+        document.getElementById('currentPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('newPassword').focus();
+            }
+        });
+
+        document.getElementById('newPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('confirmPassword').focus();
+            }
+        });
+
+        document.getElementById('confirmPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                changeAdminPassword();
+            }
+        });
+
+        // Exportar sistema
+        document.getElementById('exportSystemBtn').addEventListener('click', () => {
+            if (suppliers.length === 0) {
+                alert('⚠️ No hay datos para exportar. Agrega proveedores y productos primero.');
+                return;
+            }
+            
+            const shareText = generateSystemShareText();
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+
+        document.getElementById('exportEmailBtn').addEventListener('click', () => {
+            if (suppliers.length === 0) {
+                alert('⚠️ No hay datos para exportar. Agrega proveedores y productos primero.');
+                return;
+            }
+            
+            const shareText = generateSystemShareText();
+            const subject = encodeURIComponent(`LÍDER MARKET - Sistema con ${suppliers.length} proveedores`);
+            const body = encodeURIComponent(shareText);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        });
+
+        document.getElementById('downloadSystemBtn').addEventListener('click', () => {
+            if (suppliers.length === 0) {
+                alert('⚠️ No hay datos para exportar. Agrega proveedores y productos primero.');
+                return;
+            }
+            
+            const systemData = exportSystemData();
+            const filename = `LIDER_MARKET_Sistema_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const blob = new Blob([systemData], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert(`💾 Archivo descargado: ${filename}\n\nPuedes enviarlo por cualquier medio y importarlo en otro dispositivo.`);
+        });
+
+        document.getElementById('copySystemBtn').addEventListener('click', () => {
+            if (suppliers.length === 0) {
+                alert('⚠️ No hay datos para copiar. Agrega proveedores y productos primero.');
+                return;
+            }
+            
+            const systemData = exportSystemData();
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(systemData).then(() => {
+                    alert('📋 Datos del sistema copiados al portapapeles!\n\nPuedes pegarlos en otro dispositivo para importar el sistema completo.');
+                }).catch(() => {
+                    fallbackCopyToClipboard(systemData);
+                });
+            } else {
+                fallbackCopyToClipboard(systemData);
+            }
+        });
+
+        // Importar sistema
+        document.getElementById('importSystemBtn').addEventListener('click', () => {
+            const jsonData = document.getElementById('importSystemData').value.trim();
+            
+            if (!jsonData) {
+                alert('⚠️ Pega los datos del sistema exportado en el área de texto.');
+                return;
+            }
+            
+            if (suppliers.length > 0) {
+                if (!confirm('⚠️ Esto reemplazará todos los datos actuales.\n\n¿Continuar con la importación?')) {
+                    return;
+                }
+            }
+            
+            importSystemData(jsonData);
+            document.getElementById('importSystemData').value = '';
+        });
+
+        // Limpiar conteos
+        document.getElementById('clearCountsBtn').addEventListener('click', () => {
+            if (Object.keys(inventoryCounts).length === 0) {
+                alert('ℹ️ No hay conteos para limpiar.');
+                return;
+            }
+            
+            const countedItems = Object.keys(inventoryCounts).length;
+            
+            if (confirm(`¿Limpiar todos los conteos?\n\n🗑️ Se eliminarán ${countedItems} conteos guardados\n⚠️ Esta acción no se puede deshacer`)) {
+                inventoryCounts = {};
+                
+                // Actualizar la vista actual si estamos en conteo
+                if (currentSupplier) {
+                    const supplierProducts = products[currentSupplier.id] || [];
+                    loadProducts(supplierProducts);
+                    updateProgress();
+                }
+                
+                alert('✅ Todos los conteos han sido limpiados.\n\nYa puedes empezar un nuevo conteo desde cero.');
+            }
+        });
+
+        // Enviar resultados por email
+        document.getElementById('emailResultsBtn').addEventListener('click', () => {
+            const report = generateCountingReport();
+            
+            if (!report) {
+                alert('⚠️ No hay datos de conteo para enviar.');
+                return;
+            }
+            
+            const subject = encodeURIComponent(`Reporte de Conteo - ${currentSupplier.name} - ${new Date().toLocaleDateString('es-MX')}`);
+            const body = encodeURIComponent(report);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        });
+
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('📋 Datos copiados al portapapeles!');
+            } catch (err) {
+                alert('❌ Error al copiar. Inténtelo manualmente.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Inicializar aplicación
+        showScreen('loginScreen');
+        updateManagementInfo();
+    </script>
+</body>
+</html>
