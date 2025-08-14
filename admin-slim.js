@@ -1,88 +1,95 @@
-/*! admin-slim.js — limpia bloques y fija tabs locales (Productos/Proveedores) */
+/*! admin-slim.js — limpiar “sistema completo” y fijar tabs locales (Proveedores/Productos) */
 (function () {
-  // ===== 1) QUÉ BLOQUES QUITAR =====
-  // Puedes añadir/quitar títulos aquí. Coincide por texto del encabezado.
-  const HIDE_SECTIONS = [
-    /importación de productos/i,
-    /compartir sistema/i,
+  // ===== Qué quitar (SOLO sistema completo) =====
+  // NO tocamos “Importación de Productos”.
+  const REMOVE_SECTIONS = [
+    /compartir sistema cargado/i,
+    /exportar sistema/i,
+    /exportar aplicaci[oó]n/i,
     /importar sistema completo/i,
-    /cargar datos de prueba/i
+    /cargar sistema completo/i,
+    /importaci[oó]n del sistema completo/i,
   ];
 
   // ===== Helpers =====
+  const $$  = (sel, r = document) => Array.from(r.querySelectorAll(sel));
   const norm = s => (s || "").toLowerCase();
-  const $$ = (sel, r = document) => Array.from(r.querySelectorAll(sel));
 
-  // Encuentra y oculta/elimina la "card/section" que contiene un encabezado que coincida
-  function pruneSections() {
-    const headers = $$("h1,h2,h3,legend,.card-header,.section-title,.title");
+  function removeWholeSystemBlocks() {
+    // Busca encabezados y “cards” que contengan esos títulos y elimínalos
+    const headers = $$("h1,h2,h3,legend,.card-header,.section-title,.title,button,div");
     headers.forEach(h => {
       const t = norm(h.textContent || "");
-      if (HIDE_SECTIONS.some(rx => rx.test(t))) {
+      if (REMOVE_SECTIONS.some(rx => rx.test(t))) {
         const box = h.closest(".card, section, article, div");
-        if (box) {
-          // eliminar por completo (si prefieres ocultar, usa: box.style.display='none')
-          box.remove();
-          // console.log("[admin-slim] removido:", t.slice(0, 80));
-        }
+        if (box) box.remove();
       }
     });
   }
 
   // Conecta SOLO la tarjeta “Gestión Manual de Proveedores y Productos”
-  // sin interferir con tus handlers; alterna visibilidad entre sus dos paneles.
+  // y alterna sus paneles de Proveedores/Productos (sin reemplazar tus handlers).
   function wireLocalTabs() {
     const btnProd = document.getElementById("manageProductsTab");
     const btnProv = document.getElementById("manageSuppliersTab");
     if (!btnProd || !btnProv) return;
 
-    // Hallar la barra que contiene ambos botones
+    // Encontrar la barra que contiene ambos botones dentro de la misma tarjeta
     let bar = btnProd;
     while (bar && !bar.contains(btnProv)) bar = bar.parentElement;
     if (!bar) return;
 
-    // Tarjeta contenedora
     const card = bar.closest(".card") || bar.closest("section,article,div");
     if (!card) return;
 
-    // Tomar todos los hermanos que vienen DESPUÉS de la barra como candidatos a paneles
-    const siblings = [];
+    // Tomamos todos los hermanos que vienen DESPUÉS de la barra como candidatos de panel
+    const sibs = [];
     let n = bar.nextElementSibling;
-    while (n && card.contains(n)) { siblings.push(n); n = n.nextElementSibling; }
-    if (siblings.length === 0) return;
+    while (n && card.contains(n)) { sibs.push(n); n = n.nextElementSibling; }
+    if (sibs.length === 0) return;
 
-    // Puntuación por contenido para elegir panel de Proveedores / Productos
-    const textOf = el =>
-      norm((el.innerText || "") + " " +
-        $$("#[placeholder]", el).map(x => x.getAttribute("placeholder") || "").join(" "));
+    const textOf = el => norm(
+      (el.innerText || "") + " " +
+      $$("#[placeholder]", el).map(x => x.getAttribute("placeholder") || "").join(" ")
+    );
 
     function score(el, kind) {
       const t = textOf(el);
       if (kind === "prod") {
         return 2 * (t.match(/\bproducto(s)?\b/g) || []).length
-          + 1 * (t.match(/c[oó]digo|barras|precio|stock|unidad(es)?/g) || []).length
-          - 1 * (t.match(/\bproveedor(es)?\b/g) || []).length
-          + t.length / 10000;
-      } else {
+             + 1 * (t.match(/c[oó]digo|barras|precio|stock|unidad(es)?/g) || []).length
+             - 1 * (t.match(/\bproveedor(es)?\b/g) || []).length
+             + t.length / 10000;
+      } else { // prov
         return 2 * (t.match(/\bproveedor(es)?\b/g) || []).length
-          + 1 * (t.match(/agregar proveedor|nombre del proveedor|rfc|tel[eé]fono|correo/g) || []).length
-          - 1 * (t.match(/\bproducto(s)?\b/g) || []).length
-          + t.length / 10000;
+             + 1 * (t.match(/agregar proveedor|nombre del proveedor|rfc|tel[eé]fono|correo/g) || []).length
+             - 1 * (t.match(/\bproducto(s)?\b/g) || []).length
+             + t.length / 10000;
       }
     }
 
-    const bestProv = siblings.map(el => ({ el, s: score(el, "prov") }))
-      .sort((a, b) => b.s - a.s)[0]?.el;
+    const provPanel = sibs.map(el => ({ el, s: score(el, "prov") }))
+                          .sort((a, b) => b.s - a.s)[0]?.el;
 
-    const bestProd = siblings.map(el => ({ el, s: score(el, "prod") }))
-      .sort((a, b) => b.s - a.s)
-      .find(x => x.el !== bestProv)?.el || null;
+    const prodPanel = sibs.map(el => ({ el, s: score(el, "prod") }))
+                          .sort((a, b) => b.s - a.s)
+                          .find(x => x.el !== provPanel)?.el || null;
 
-    if (!bestProv || !bestProd) return;
+    if (!provPanel || !prodPanel) return;
 
-    // Alternador local
     function show(panel) {
-      [bestProv, bestProd].forEach(p => {
+      [provPanel, prodPanel].forEach(p => {
+        if (!p) return;
+        // destapar si algún padre lo oculta
+        let a = p;
+        while (a && a !== card) {
+          if (a.tagName === "DETAILS" && !a.open) a.open = true;
+          if (a.hasAttribute("hidden")) a.hidden = false;
+          const cs = getComputedStyle(a);
+          if (cs.display === "none") a.style.display = "block";
+          if (cs.visibility === "hidden") a.style.visibility = "visible";
+          a = a.parentElement;
+        }
         p.hidden = (p !== panel);
         p.style.display = (p === panel ? "" : "none");
         p.style.visibility = "";
@@ -90,25 +97,20 @@
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // Estado inicial: Proveedores
-    show(bestProv);
+    // Estado inicial: Proveedores visible (edición manual inmediata)
+    show(provPanel);
 
-    // NO sustituimos tus handlers; solo añadimos listeners (sin preventDefault)
-    btnProv.addEventListener("click", () => show(bestProv), { capture: true });
-    btnProd.addEventListener("click", () => show(bestProd), { capture: true });
-
-    // console.log("[admin-slim] tabs listos");
+    // NO sustituimos onclicks existentes: sólo escuchamos
+    btnProv.addEventListener("click", () => show(provPanel), { capture: true });
+    btnProd.addEventListener("click", () => show(prodPanel ), { capture: true });
   }
 
   function start() {
-    pruneSections();     // 1) limpia bloques
-    wireLocalTabs();     // 2) fija tabs locales
-    console.log("[admin-slim] listo");
+    removeWholeSystemBlocks();
+    wireLocalTabs();
+    console.log("[admin-slim] activo — se mantienen Importación de Productos, se oculta Sistema Completo");
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
-  } else {
-    start();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
 })();
