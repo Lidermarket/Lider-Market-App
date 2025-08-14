@@ -1,56 +1,68 @@
+// Service Worker v4 — no cachea HTML; red primero en navegaciones
+const CACHE = 'lm-v4';
 
-// Service Worker v3 — includes gesture-update.js in precache
-const CACHE_NAME = 'lider-market-v3';
+// Solo assets estáticos; NO ponemos index.html aquí.
 const CORE_ASSETS = [
-  './',
-  './index.html',
   './manifest.webmanifest',
-  './sw.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/maskable-512.png',
-  './gesture-update.js'
+  './gesture-update.js',
+  './admin-tabs.js',   // ok si lleva ?v=...; el SW igual lo refresca
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
+    caches.open(CACHE).then((c) => c.addAll(CORE_ASSETS)).catch(()=>null)
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
-      const clientsArr = await self.clients.matchAll({type: 'window'});
-      clientsArr.forEach(c => c.postMessage({type:'UPDATE_READY'}));
-    })()
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE) ? caches.delete(k) : Promise.resolve()));
+    const clientsArr = await self.clients.matchAll({ type: 'window' });
+    clientsArr.forEach(c => c.postMessage({ type: 'UPDATE_READY' }));
+  })());
   self.clients.claim();
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  const url = new URL(req.url);
   if (req.method !== 'GET') return;
-  if (url.origin === location.origin) {
+
+  // 1) Para páginas (navegaciones): red primero, sin cachear HTML
+  const isPage = req.mode === 'navigate' || req.destination === 'document';
+  if (isPage) {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        if (cached) return cached;
-        return fetch(req).then((res) => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return res;
-        }).catch(() => caches.match('./index.html'));
-      })
+      fetch(req).catch(() =>
+        new Response(
+          '<!doctype html><meta charset="utf-8"><title>Sin conexión</title>' +
+          '<style>body{font-family:sans-serif;padding:2rem}</style>' +
+          '<h1>Sin conexión</h1><p>Vuelve a intentarlo cuando tengas Internet.</p>',
+          { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        )
+      )
     );
+    return;
+  }
+
+  // 2) Para assets del mismo origen: "stale-while-revalidate"
+  const sameOrigin = new URL(req.url).origin === location.origin;
+  if (sameOrigin) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      const net = fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+        return res;
+      }).catch(() => cached);
+      return cached || net;
+    })());
   }
 });
