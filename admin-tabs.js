@@ -1,4 +1,4 @@
-/*! admin-tabs.js v1.3 — scroll + ensureVisible (no oculta nada) */
+/*! admin-tabs.js v1.4 — no reemplaza handlers; asegura visibilidad y scroll */
 (function(){
   function byText(sel, rx){
     for (const el of document.querySelectorAll(sel)) {
@@ -9,11 +9,11 @@
   }
   function findProductos(){
     return byText('h1,h2,h3,legend,label,button,div,section,article',
-                  /\bproductos\b|productos por proveedor|agregar producto/);
+                  /\bproductos\b|productos por proveedor|agregar producto|importaci[oó]n de productos/);
   }
   function findProveedores(){
     return byText('h1,h2,h3,legend,label,button,div,section,article',
-                  /\bproveedores\b/);
+                  /\bproveedores\b|agenda de proveedores/);
   }
   function ensureVisible(el){
     if (!el) return;
@@ -26,33 +26,30 @@
       n = n.parentElement;
     }
   }
-  function highlightAndShow(el){
-    if (!el) return;
-    ensureVisible(el);
-    el.scrollIntoView({behavior:'smooth', block:'start'});
-    const prev = el.style.outline;
-    el.style.outline = '2px solid #2563eb';
-    setTimeout(()=>{ el.style.outline = prev; }, 1200);
+  function afterToggleFocus(targetFinder){
+    // Da tiempo a que tu handler original cambie la vista (SPA),
+    // luego destapa y centra.
+    setTimeout(() => {
+      const el = targetFinder();
+      if (!el) return;
+      ensureVisible(el);
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 50);
   }
   function main(){
     const btnProd = document.getElementById('manageProductsTab');
     const btnProv = document.getElementById('manageSuppliersTab');
     if (!btnProd || !btnProv) return;
 
-    let toProd = findProductos();
-    let toProv = findProveedores();
+    // No sobrescribimos onclick; añadimos listeners aparte
+    btnProd.addEventListener('click', () => afterToggleFocus(findProductos), {passive:true});
+    btnProv.addEventListener('click', () => afterToggleFocus(findProveedores), {passive:true});
 
-    // Re-escanea cuando el DOM cambia (SPA)
-    const obs = new MutationObserver(() => {
-      if (!toProd) toProd = findProductos();
-      if (!toProv) toProv = findProveedores();
-    });
+    // Re-escaneo por si cambia el DOM (SPA)
+    const obs = new MutationObserver(() => {});
     obs.observe(document.body, {subtree:true, childList:true});
 
-    btnProd.onclick = e => { e.preventDefault?.(); highlightAndShow(toProd || document.body); };
-    btnProv.onclick = e => { e.preventDefault?.(); highlightAndShow(toProv || document.body); };
-
-    console.log('[admin-tabs] v1.3 ready', {btnProd, btnProv, toProd, toProv});
+    console.log('[admin-tabs] v1.4 listo (handlers no reemplazados)');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
   else main();
