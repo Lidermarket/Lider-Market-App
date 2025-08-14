@@ -102,7 +102,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-</meta></meta></head>
+</meta></meta><style>
+#app-update-controller{position:fixed;right:14px;bottom:14px;z-index:99999;display:none}
+#app-update-controller button{padding:10px 14px;border:none;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.2);font-weight:600;background:#2563eb;color:#fff;cursor:pointer}
+#app-update-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:99999}
+</style></head>
 <body>
 <div id="app">
 <!-- ====== LOGIN ====== -->
@@ -1656,5 +1660,62 @@ Ejemplo Cero\tGalletas Z\t0\t0000000000000\t1\tINDIVIDUAL`;
     });
   }
 </script>
-</body>
+<div id="app-update-controller"><button id="btn-force-update">Actualizar app</button></div><div id="app-update-toast">Actualización lista. Reinicia la app.</div><script>
+// --- PWA Update Helper ---
+(function(){
+  const $btn = document.getElementById('btn-force-update');
+  const $wrap = document.getElementById('app-update-controller');
+  const $toast = document.getElementById('app-update-toast');
+  let tapCount = 0, tapTimer = null;
+
+  function showToast(msg){
+    if(!$toast) return;
+    $toast.textContent = msg || 'Actualización lista';
+    $toast.style.display = 'block';
+    setTimeout(()=>{$toast.style.display='none';}, 2500);
+  }
+
+  // 6 clics rápidos en <header> muestran el botón
+  document.addEventListener('click', function(ev){
+    const withinHeader = (ev.target.closest && ev.target.closest('header')) || (ev.target.tagName === 'HEADER');
+    if(withinHeader){
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(()=>{ tapCount = 0; }, 1000);
+      if(tapCount >= 6){
+        $wrap && ($wrap.style.display = 'block');
+        tapCount = 0;
+      }
+    }
+  });
+
+  // Tecla: Ctrl + Alt + U
+  document.addEventListener('keydown', (e)=>{
+    if(e.ctrlKey && e.altKey && (e.key==='u' || e.key==='U')){
+      $wrap && ($wrap.style.display = 'block');
+    }
+  });
+
+  async function forceUpdate(){
+    if(!('serviceWorker' in navigator)) return showToast('Sin Service Worker');
+    const regs = await navigator.serviceWorker.getRegistrations();
+    if(!regs.length) return showToast('SW no registrado');
+    await Promise.all(regs.map(r => r.update().catch(()=>{})));
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({type:'SKIP_WAITING'});
+    }
+    showToast('Buscando actualización... si existe se aplicará al reiniciar');
+    setTimeout(()=>location.reload(), 1200);
+  }
+
+  $btn && $btn.addEventListener('click', forceUpdate);
+
+  navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', (event)=>{
+    if(event.data && event.data.type==='UPDATE_READY'){
+      showToast('Actualización lista. Reinicia la app');
+      $wrap && ($wrap.style.display = 'block');
+    }
+  });
+})();
+</script></body>
 </html>
