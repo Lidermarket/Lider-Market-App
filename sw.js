@@ -1,6 +1,6 @@
 
-// Simple cache-first Service Worker for LÍDER MARKET
-const CACHE_NAME = 'lider-market-v2';
+// Service Worker v3 — includes gesture-update.js in precache
+const CACHE_NAME = 'lider-market-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,8 @@ const CORE_ASSETS = [
   './sw.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/maskable-512.png'
+  './icons/maskable-512.png',
+  './gesture-update.js'
 ];
 
 self.addEventListener('install', (event) => {
