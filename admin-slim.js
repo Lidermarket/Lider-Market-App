@@ -48,10 +48,10 @@
     while (n && card.contains(n)) { sibs.push(n); n = n.nextElementSibling; }
     if (sibs.length === 0) return;
 
-    const textOf = el => norm(
-      (el.innerText || "") + " " +
-      $$("#[placeholder]", el).map(x => x.getAttribute("placeholder") || "").join(" ")
-    );
+const textOf = (el) => norm(
+  (el.innerText || "") + " " +
+  $$( "[placeholder]", el ).map(n => n.getAttribute("placeholder") || "").join(" ")
+);
 
     function score(el, kind) {
       const t = textOf(el);
