@@ -1,0 +1,28 @@
+// cloud-config.js — preconfigura la sincronización en la nube para LÍDER MARKET
+(function () {
+  const CLOUD_KEY = 'lider_market_v1_cloud';
+
+  // 👉 ID del equipo (puedes cambiarlo si usas otro)
+  const teamId = 'LIDER-MX-2024-AB12CD34EF56';
+
+  // 👉 Config de Firebase (la que muestra tu consola)
+  const config = {
+    apiKey: 'AIzaSyCVV5raOfecJikY9ULaZ7dW7B9n6SVUCrw',
+    authDomain: 'lider-market.firebaseapp.com',
+    projectId: 'lider-market',
+    storageBucket: 'lider-market.firebasestorage.app',
+    messagingSenderId: '572816917731',
+    appId: '1:572816917731:web:5b6c8966d93a6c443971d6'
+  };
+
+  try {
+    // Guardamos la config para que la app la detecte y quede habilitada
+    localStorage.setItem(
+      CLOUD_KEY,
+      JSON.stringify({ enabled: true, teamId, config })
+    );
+    console.log('[cloud-config] listo ✓', teamId);
+  } catch (e) {
+    console.warn('[cloud-config] no se pudo guardar:', e);
+  }
+})();
