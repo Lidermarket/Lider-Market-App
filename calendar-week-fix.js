@@ -1,65 +1,54 @@
-/*! calendar-week-fix.js v1 */
-(() => {
-  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
-  const norm = s => (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+/* calendar-scroll-fix.js v1 */
+(function () {
+  function enhanceGrid(grid) {
+    if (!grid) return;
 
-  const dayNames = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
+    // Envolver en un contenedor desplazable (una sola vez)
+    if (!grid.parentElement.classList.contains('cal-scroll-wrap')) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cal-scroll-wrap';
+      wrap.style.overflowX = 'auto';
+      wrap.style.overflowY = 'hidden';
+      wrap.style.webkitOverflowScrolling = 'touch';
+      wrap.style.scrollSnapType = 'x mandatory';
+      wrap.style.paddingBottom = '6px';
 
-  function looksLikeWeek(el){
-    const text = norm(el.innerText).slice(0, 1200);
-    let hits = 0; for (const d of dayNames) if (text.includes(d)) hits++;
-    return hits >= 3 && el.querySelectorAll('div,section,article').length >= 7;
-  }
+      grid.parentNode.insertBefore(wrap, grid);
+      wrap.appendChild(grid);
 
-  function enhance(){
-    // Estilos (una sola vez)
-    if (!document.getElementById('week-scroll-style')){
-      const st = document.createElement('style'); st.id = 'week-scroll-style';
-      st.textContent = `
-      .week-scroll{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
-                   scroll-snap-type:x mandatory; scroll-padding:16px}
-      .week-grid{display:grid; grid-auto-flow:column; grid-auto-columns:min(90vw, 420px);
-                 gap:12px; align-items:start}
-      .week-day{scroll-snap-align:center}
-      @media (min-width:1000px){ .week-grid{grid-auto-columns:min(45vw, 520px);} }
-      `;
-      document.head.appendChild(st);
+      // Asegura ancho para tener scroll horizontal
+      grid.style.minWidth = '1100px';
+      grid.querySelectorAll('.day-col').forEach(col => {
+        col.style.scrollSnapAlign = 'center';
+      });
+
+      // Permite desplazar con la rueda del mouse (vertical->horizontal)
+      wrap.addEventListener('wheel', e => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          wrap.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      }, { passive: false });
     }
 
-    // Buscar el contenedor de la semana
-    let card = $$('section,article,.card,div').find(looksLikeWeek);
-    if (!card || card.classList.contains('week-hacked')) return;
-    card.classList.add('week-hacked');
-
-    // Tomar los hijos (días)
-    let days = Array.from(card.children).filter(e => e.nodeType === 1 && e.textContent.trim() !== '');
-    if (days.length < 7) days = $$(':scope > *', card);
-
-    // Armar wrapper de scroll
-    const wrap = document.createElement('div'); wrap.className = 'week-scroll';
-    const grid = document.createElement('div'); grid.className = 'week-grid';
-    card.parentElement.insertBefore(wrap, card);
-    wrap.appendChild(grid);
-
-    days.forEach(d => { d.classList.add('week-day'); grid.appendChild(d); });
-    card.style.display = 'none'; // ocultamos el contenedor viejo
-
-    // Centrar “hoy”
-    const todayName = new Date().toLocaleDateString('es-MX', { weekday: 'long' });
-    const today = days.find(d => norm(d.innerText).includes(norm(todayName)));
-    setTimeout(() => {
-      (today || days[0]).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }, 100);
+    // Centra automáticamente el día actual
+    const wrap = grid.parentElement;
+    const today = new Date().getDay(); // 0=Dom .. 6=Sab
+    const col = grid.querySelector('.day-col[data-day="' + today + '"]');
+    if (col && wrap) {
+      const target = col.offsetLeft - Math.max(0, (wrap.clientWidth - col.clientWidth) / 2);
+      wrap.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    }
   }
 
-  const start = () => {
-    enhance();
-    // Por si el calendario se monta tarde
-    const obs = new MutationObserver(() => enhance());
-    obs.observe(document, { childList: true, subtree: true });
-    setTimeout(() => obs.disconnect(), 8000);
-  };
+  function run() {
+    enhanceGrid(document.getElementById('calendarGridUser'));
+    enhanceGrid(document.getElementById('calendarGridAdmin'));
+  }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
 })();
