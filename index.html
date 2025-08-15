@@ -1696,6 +1696,52 @@ Ejemplo Cero\tGalletas Z\t0\t0000000000000\t1\tINDIVIDUAL`;
     }
   });
 
+<!-- 🔧 Registro del Service Worker para PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    });
+  }
+</script>
+
+<!-- Botón de forzar actualización (lo que ya tenías) -->
+<div id="app-update-controller"><button id="btn-force-update">Actualizar app</button></div>
+<div id="app-update-toast">Actualización lista. Reinicia la app.</div>
+<script>
+// --- PWA Update Helper (tal como ya lo tienes) ---
+(function(){
+  const $btn = document.getElementById('btn-force-update');
+  const $wrap = document.getElementById('app-update-controller');
+  const $toast = document.getElementById('app-update-toast');
+  let tapCount = 0, tapTimer = null;
+
+  function showToast(msg){
+    if(!$toast) return;
+    $toast.textContent = msg || 'Actualización lista';
+    $toast.style.display = 'block';
+    setTimeout(()=>{$toast.style.display='none';}, 2500);
+  }
+
+  document.addEventListener('click', function(ev){
+    const withinHeader = (ev.target.closest && ev.target.closest('header')) || (ev.target.tagName === 'HEADER');
+    if(withinHeader){
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(()=>{ tapCount = 0; }, 1000);
+      if(tapCount >= 6){
+        $wrap && ($wrap.style.display = 'block');
+        tapCount = 0;
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.ctrlKey && e.altKey && (e.key==='u' || e.key==='U')){
+      $wrap && ($wrap.style.display = 'block');
+    }
+  });
+
   async function forceUpdate(){
     if(!('serviceWorker' in navigator)) return showToast('Sin Service Worker');
     const regs = await navigator.serviceWorker.getRegistrations();
@@ -1717,11 +1763,33 @@ Ejemplo Cero\tGalletas Z\t0\t0000000000000\t1\tINDIVIDUAL`;
     }
   });
 })();
+</script>
+
+<!-- 🔒 Guard de pantallas: asegura que solo se vea el login al inicio -->
+<script>
+(function(){
+  const ids = ['loginScreen','userDashboard','adminDashboard','countingScreen'];
+  // Oculta todo
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  // Muestra login por defecto (tu app luego cambiará a user/admin)
+  const login = document.getElementById('loginScreen');
+  if (login) login.classList.remove('hidden');
+})();
+</script>
+
+<!-- Tu orden de scripts (igual al que ya usas) -->
 <script src="./gesture-update.js"></script>
 <script src="./admin-slim.v2.js?v=6"></script>
 <!-- Si existe, déjalo; si no, puedes omitirlo -->
 <script src="./calendar-week-fix.js?v=2"></script>
 <!-- Scroll horizontal + centrado en “hoy” -->
 <script src="./calendar-scroll-fix.js?v=1"></script>
+
+</body>
+</html>
+
 </body>
 </html>
