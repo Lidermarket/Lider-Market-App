@@ -221,13 +221,15 @@ function injectQuickProductForm(){
     console.log('[admin-slim.v2] prov-ui: aplicado', {items: rows.length});
   }
 
-  function runAll(){
-    if (!isAdminScreen()) { console.log('[admin-slim.v2] skip (no admin)'); return; }
-    removeWholeSystemBlocks();
-    wireLocalTabsV5();
-    enhanceProvidersUI();
-    console.log('[admin-slim.v2] activo');
-  }
+ function runAll(){
+  if (!isAdminScreen()) { console.log('[admin-slim.v2] skip (no admin)'); return; }
+  removeWholeSystemBlocks();
+  wireLocalTabsV5();
+  enhanceProvidersUI();
+  injectQuickProductForm();   // ← esta línea
+
+  console.log('[admin-slim.v2] activo');
+}
 
   // Exponer para pruebas desde consola
   window.__asRunAll = runAll;
