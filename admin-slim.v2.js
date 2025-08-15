@@ -1,135 +1,224 @@
 /*! admin-slim.v2.js
-   - Actúa SOLO en Admin (no login).
+   - Actúa SOLO en Admin (no interfiere con Login).
    - Mantiene "Importación de Productos".
    - Elimina "Compartir sistema cargado / Exportar / Enviar por Email / Copiar Datos"
      y "Importar sistema completo".
    - Fija pestañas locales en la tarjeta "Gestión Manual de Proveedores y Productos".
+   - Mejora UI de "Proveedores existentes": franjas azul/gris y orden A→Z, ocultando la pill "Color".
 */
-(function () {
-  // --- Utilidades robustas ---
-  const $$   = (sel, r = document) => Array.from(r.querySelectorAll(sel));
+(() => {
+  const $$  = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const norm = (s) => (s || "")
-      .toString()
-      .normalize("NFD").replace(/\p{Diacritic}/gu, "")
-      .toLowerCase().trim();
+    .toString()
+    .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .toLowerCase().trim();
 
-  // Ejecutar SOLO si realmente estamos en Admin
+  // --------- 1) SOLO en Admin ---------
   function isAdminScreen() {
-    // Señales: texto "Panel de Administracion" o existen los tabs de gestión
-    const bodyTxt = norm(document.body && document.body.innerText);
-    if (bodyTxt.includes("panel de administracion")) return true;
     if (document.getElementById("manageProductsTab") || document.getElementById("manageSuppliersTab")) return true;
-    return false;
+    const t = norm(document.body && document.body.innerText);
+    return t.includes("panel de administracion") || t.includes("gestión de datos");
   }
 
-  // Quitar SOLO bloques de "sistema completo" (conservar "Importación de Productos")
+  // --------- 2) Limpia "sistema completo" (conserva Importación de Productos) ---------
   function removeWholeSystemBlocks() {
     const TARGETS = [
       /compartir sistema cargado/,
       /exportar sistema|exportar aplicacion|descargar archivo|enviar por email|copiar datos/,
       /importar sistema completo|cargar sistema completo|importacion del sistema completo/
     ];
-    // Buscamos encabezados típicos de cards/sections
     const headers = $$("h1,h2,h3,legend,.card-header,.section-title,.title,button");
-    headers.forEach((h) => {
+    headers.forEach(h => {
       const t = norm(h.textContent || "");
-      if (TARGETS.some((rx) => rx.test(t))) {
+      if (TARGETS.some(rx => rx.test(t))) {
         const card = h.closest(".card, section, article, div");
         if (card) card.remove();
       }
     });
   }
 
-  // Tabs locales: SOLO dentro de la tarjeta de “Gestión Manual…”
-  function wireLocalTabs() {
+  // --------- 3) Tabs locales: Proveedores / Productos dentro de la tarjeta ---------
+  function wireLocalTabsV5() {
     const btnProd = document.getElementById("manageProductsTab");
     const btnProv = document.getElementById("manageSuppliersTab");
-    if (!btnProd || !btnProv) return; // si no están, no hacemos nada
+    if (!btnProd || !btnProv) return;
 
-    // Encontrar el contenedor (tarjeta) y la barra que contiene ambos botones
+    // Tarjeta: antepasado común de ambos botones
+    function lca(a, b, stop) {
+      const seen = new Set(); let x = a;
+      while (x && x !== stop) { seen.add(x); x = x.parentElement; }
+      x = b; while (x && x !== stop) { if (seen.has(x)) return x; x = x.parentElement; }
+      return stop || document.body;
+    }
+    const card = lca(btnProd, btnProv, document.body);
+
+    // Barra que contiene a ambos
     let bar = btnProd;
     while (bar && !bar.contains(btnProv)) bar = bar.parentElement;
     if (!bar) return;
 
-    const card = bar.closest(".card") || bar.closest("section,article,div");
-    if (!card) return;
+    // Descendientes de la tarjeta que están DESPUÉS de la barra
+    const all = Array.from(card.querySelectorAll("section,article,div"));
+    const after = all.filter(el =>
+      (bar.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) && !el.contains(bar)
+    );
 
-    // Tomar todos los hermanos DESPUÉS de la barra como candidatos a paneles
-    const siblings = [];
-    let n = bar.nextElementSibling;
-    while (n && card.contains(n)) { siblings.push(n); n = n.nextElementSibling; }
-    if (siblings.length === 0) return;
+    // Candidatos con contenido/formularios
+    const candidates = after.filter(el => {
+      const txt = (el.innerText || "").trim();
+      const inputs = el.querySelectorAll("input,select,textarea,button").length;
+      return txt.length > 60 || inputs >= 2;
+    });
+    if (!candidates.length) return;
 
-    const textOf = (el) => norm(
+    const textOf = el => norm(
       (el.innerText || "") + " " +
       $$( "[placeholder]", el ).map(n => n.getAttribute("placeholder") || "").join(" ")
     );
 
-    // Puntuar candidatos para separar Proveedores vs Productos
     function score(el, kind) {
       const t = textOf(el);
       if (kind === "prod") {
-        return  2 * (t.match(/\bproducto(s)?\b/g) || []).length
-              + 1 * (t.match(/codigo|barras|precio|stock|unidad(es)?/g) || []).length
-              - 1 * (t.match(/\bproveedor(es)?\b/g) || []).length
-              + t.length / 10000;
-      } else { // prov
-        return  2 * (t.match(/\bproveedor(es)?\b/g) || []).length
-              + 1 * (t.match(/agregar proveedor|nombre del proveedor|rfc|telefono|correo/g) || []).length
-              - 1 * (t.match(/\bproducto(s)?\b/g) || []).length
-              + t.length / 10000;
+        return  2*(t.match(/\bproducto(s)?\b/g) || []).length
+              + 1*(t.match(/codigo|barras|precio|stock|unidad(es)?/g) || []).length
+              - 1*(t.match(/\bproveedor(es)?\b/g) || []).length
+              + t.length/10000;
+      } else {
+        return  2*(t.match(/\bproveedor(es)?\b/g) || []).length
+              + 1*(t.match(/agregar proveedor|nombre del proveedor|rfc|telefono|correo/g) || []).length
+              - 1*(t.match(/\bproducto(s)?\b/g) || []).length
+              + t.length/10000;
       }
     }
 
-    const provPanel = siblings.map(el => ({el, s:score(el, "prov")}))
-                              .sort((a,b)=>b.s-a.s)[0]?.el;
-    const prodPanel = siblings.map(el => ({el, s:score(el, "prod")}))
-                              .sort((a,b)=>b.s-a.s)
-                              .find(x => x.el !== provPanel)?.el || null;
+    const provSorted = candidates.map(el => ({ el, s: score(el, "prov") })).sort((a,b)=>b.s-a.s);
+    const prodSorted = candidates.map(el => ({ el, s: score(el, "prod") })).sort((a,b)=>b.s-a.s);
+
+    let provPanel = provSorted[0]?.el || null;
+    let prodPanel = prodSorted.find(x =>
+      x.el !== provPanel && !(provPanel && (x.el.contains(provPanel) || provPanel.contains(x.el)))
+    )?.el || null;
 
     if (!provPanel || !prodPanel) return;
 
-    // Destapar cualquier padre oculto
-    function reveal(el) {
-      let a = el;
-      while (a && a !== card) {
-        if (a.tagName === "DETAILS" && !a.open) a.open = true;
-        if (a.hasAttribute("hidden")) a.hidden = false;
-        const cs = getComputedStyle(a);
-        if (cs.display === "none") a.style.display = "block";
-        if (cs.visibility === "hidden") a.style.visibility = "visible";
-        a = a.parentElement;
-      }
-    }
-
     function show(panel) {
-      reveal(panel);
       [provPanel, prodPanel].forEach(p => {
         p.hidden = (p !== panel);
         p.style.display = (p === panel ? "" : "none");
         p.style.visibility = "";
       });
-      panel.scrollIntoView({behavior:"smooth", block:"start"});
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // Estado inicial: Proveedores visible
+    // Estado inicial: Proveedores
     show(provPanel);
-
-    // NO anulamos tus handlers; sólo añadimos listeners
-    btnProv.addEventListener("click", () => show(provPanel), {capture:true});
-    btnProd.addEventListener("click", () => show(prodPanel ), {capture:true});
+    btnProv.addEventListener("click", () => show(provPanel), { capture: true });
+    btnProd.addEventListener("click", () => show(prodPanel ), { capture: true });
   }
 
-  function start() {
-    if (!isAdminScreen()) return;      // nunca actuar fuera de Admin
-    removeWholeSystemBlocks();         // limpiar export/import de sistema completo
-    wireLocalTabs();                   // tabs locales en Gestión Manual
+  // --------- 4) Mejora UI de "Proveedores existentes": franjas + orden A→Z + ocultar "Color" ---------
+  function enhanceProvidersUI() {
+    const header = $$("h1,h2,h3,legend,.card-header,.section-title,.title")
+      .find(h => norm(h.textContent).includes("proveedores existentes"));
+    if (!header) return;
+
+    const card = header.closest(".card,section,article,div") || header.parentElement;
+
+    // Contenedor con más "filas" convincentes
+    const containers = $$(".card,section,article,div,ul,ol", card);
+    function scoreContainer(el){
+      let rows = 0;
+      for (const ch of el.children || []) {
+        const t = (ch.innerText || "").trim();
+        const hasBtns = ch.querySelector("button,[role='button'],.btn,svg,i[class*='edit'],i[class*='trash']");
+        if (t.length > 0 && (hasBtns || t.length > 15)) rows++;
+      }
+      return rows;
+    }
+    const list = containers.sort((a,b)=>scoreContainer(b)-scoreContainer(a))[0];
+    if (!list || scoreContainer(list) < 2) return;
+
+    // filas
+    const rows = Array.from(list.children).filter(el => el.nodeType === 1);
+
+    // Oculta elementos que sean pill "Color"
+    rows.forEach(r => {
+      const pill = Array.from(r.querySelectorAll("*"))
+        .find(x => {
+          const tx = norm(x.textContent);
+          return tx === "color" || tx.startsWith("color ");
+        });
+      if (pill) pill.style.display = "none";
+    });
+
+    // Extraer nombre del proveedor
+    function providerName(row){
+      const cand = row.querySelector("b,strong,.name,.title,h1,h2,h3");
+      if (cand) return cand.innerText.trim();
+      return (row.innerText || "").trim().split("\n")[0].replace(/^proveedor(es)?:\s*/i,"").trim();
+    }
+
+    // Orden A→Z (acentos ignorados)
+    rows.sort((a,b)=> norm(providerName(a)).localeCompare(norm(providerName(b)), "es", { sensitivity:"base" }));
+
+    // Estilos alternos (azul/gris)
+    if (!document.getElementById("prov-alt-style")){
+      const st = document.createElement("style");
+      st.id = "prov-alt-style";
+      st.textContent = `
+        .prov-alt { border-radius: 10px; padding: 8px; margin: 6px 0; }
+        .prov-alt-0 { background: #f0f6ff; } /* azul muy claro */
+        .prov-alt-1 { background: #f6f7f9; } /* gris claro */
+      `;
+      document.head.appendChild(st);
+    }
+
+    rows.forEach((row, i) => {
+      row.classList.remove("prov-alt-0","prov-alt-1","prov-alt");
+      row.classList.add("prov-alt", (i % 2 === 0) ? "prov-alt-0" : "prov-alt-1");
+      list.appendChild(row); // reordenado
+    });
+
+    // Observa cambios para re-aplicar automático
+    if (!list.__provObserver){
+      const apply = () => {
+        const rows2 = Array.from(list.children).filter(el => el.nodeType === 1);
+        rows2.sort((a,b)=> norm(providerName(a)).localeCompare(norm(providerName(b)), "es", {sensitivity:"base"}));
+        rows2.forEach((r,i)=>{
+          r.classList.remove("prov-alt-0","prov-alt-1","prov-alt");
+          r.classList.add("prov-alt", (i%2===0) ? "prov-alt-0" : "prov-alt-1");
+          list.appendChild(r);
+        });
+      };
+      const mo = new MutationObserver(()=> setTimeout(apply, 50));
+      mo.observe(list, { childList: true, subtree: false });
+      list.__provObserver = mo;
+    }
+  }
+
+  // --------- 5) Arranque + reintentos cortos (por si el DOM de Admin tarda) ---------
+  function runAll() {
+    if (!isAdminScreen()) return;
+    removeWholeSystemBlocks();
+    wireLocalTabsV5();
+    enhanceProvidersUI();
     console.log("[admin-slim.v2] activo");
   }
 
+  // Ejecutar al cargar y durante ~6s reintentar si el DOM se sigue montando
+  const start = () => {
+    runAll();
+    const t0 = Date.now();
+    const obs = new MutationObserver(() => {
+      if (Date.now() - t0 > 6000) { obs.disconnect(); return; }
+      runAll();
+    });
+    obs.observe(document, { childList: true, subtree: true });
+  };
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => { try { start(); } catch(e) { console.warn(e); }});
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    try { start(); } catch(e) { console.warn(e); }
+    start();
   }
 })();
