@@ -1,87 +1,70 @@
 <script>
 // calendar-scroll-fix.js
-(() => {
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const norm = s => (s||"").normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().trim();
+(function () {
+  'use strict';
 
-  function findWeekContainer(){
-    const dayWords = ["lunes","martes","miercoles","miércoles","jueves","viernes","sabado","sábado","domingo",
-                      "lun","mar","mie","mié","jue","vie","sab","sáb","dom"];
-    const blocks = $$("section,article,div,ul,ol");
-    for (const el of blocks){
-      const kids = $(":scope > *", el);
-      if (kids.length < 5) continue;
-      const hits = kids.slice(0,8).reduce((n,ch)=>{
-        const t = norm(ch.innerText||"");
-        return n + (dayWords.some(d=>t.startsWith(d)) ? 1 : 0);
-      },0);
-      if (hits >= 5) return el;
+  // Estilos mínimos para el wrapper de scroll
+  const CSS = `
+  .cal-scroll-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    width:100%;
+  }`;
+  const styleTag = document.createElement('style');
+  styleTag.textContent = CSS;
+  document.head.appendChild(styleTag);
+
+  function ensureScrollable(grid){
+    if(!grid) return null;
+    // Si aún no tiene wrapper, lo creamos
+    const parent = grid.parentElement;
+    if(!parent) return null;
+    if(!parent.classList.contains('cal-scroll-wrap')){
+      const wrap = document.createElement('div');
+      wrap.className = 'cal-scroll-wrap';
+      parent.insertBefore(wrap, grid);
+      wrap.appendChild(grid);
+      // Fuerza un ancho mínimo para que quepan los 7 días y se pueda deslizar
+      grid.style.minWidth = '980px'; // ~7 columnas de 140px
+      return wrap;
     }
-    return null;
+    return parent;
   }
 
-  function enableHorizontal(week){
-    // estilos mínimos para scroll horizontal + snap
-    Object.assign(week.style, {
-      overflowX: "auto",
-      whiteSpace: "nowrap",
-      scrollSnapType: "x mandatory",
-      WebkitOverflowScrolling: "touch",
-      scrollbarWidth: "thin"
-    });
-    // cada día se trata como "bloque" alineable
-    $(":scope > *", week).forEach(d=>{
-      d.style.display = "inline-block";
-      d.style.verticalAlign = "top";
-      d.style.scrollSnapAlign = "center";
-      d.style.minWidth = "220px";      // ajusta si lo necesitas
-      d.style.boxSizing = "border-box";
-    });
+  function centerToday(grid, wrap){
+    if(!grid || !wrap) return;
+    const today = new Date().getDay(); // 0..6 (0=Domingo)
+    const col = grid.querySelector(`.day-col[data-day="${today}"]`);
+    if(!col) return;
 
-    // arrastre con mouse/touch
-    let isDown=false, startX=0, startScroll=0;
-    week.addEventListener("pointerdown", e=>{
-      isDown=true; startX=e.clientX; startScroll=week.scrollLeft;
-      week.setPointerCapture(e.pointerId);
-    });
-    week.addEventListener("pointermove", e=>{
-      if(!isDown) return;
-      week.scrollLeft = startScroll - (e.clientX - startX);
-    }, {passive:true});
-    week.addEventListener("pointerup", ()=>{ isDown=false; });
-    week.addEventListener("pointercancel", ()=>{ isDown=false; });
-
-    // centrar en "hoy"
-    const full = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-    const todayIdx = new Date().getDay(); // 0=Dom ... 6=Sab
-    const todayNames = [full[todayIdx]];
-    if (todayNames[0]==="miercoles") todayNames.push("miércoles");
-    if (todayNames[0]==="sabado") todayNames.push("sábado");
-
-    const target = $(":scope > *", week).find(ch=>{
-      const t = norm(ch.innerText||"");
-      return todayNames.some(n => t.startsWith(n) || t.includes(n));
-    }) || $(":scope > *", week)[0];
-
-    target && target.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+    // Centrar esa columna en el contenedor con scroll
+    const rectGrid = grid.getBoundingClientRect();
+    const rectCol  = col.getBoundingClientRect();
+    const colCenter = (rectCol.left - rectGrid.left) + (rectCol.width / 2);
+    const target = Math.max(0, colCenter - (wrap.clientWidth / 2));
+    wrap.scrollTo({ left: target, behavior: 'smooth' });
   }
 
-  function run(){
-    const week = findWeekContainer();
-    if(!week) return;
-    enableHorizontal(week);
+  function apply(){
+    const ids = ['calendarGridUser','calendarGridAdmin'];
+    ids.forEach(id=>{
+      const grid = document.getElementById(id);
+      if(!grid) return;
+      const wrap = ensureScrollable(grid);
+      if(!wrap) return;
+      // Intento inmediato…
+      centerToday(grid, wrap);
+      // …y un reintento tras layout
+      setTimeout(()=>centerToday(grid, wrap), 200);
+    });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else { run(); }
-
-  // pequeños cambios posteriores al render
-  const t0 = Date.now();
-  const mo = new MutationObserver(()=>{
-    if (Date.now()-t0 > 6000) { mo.disconnect(); return; }
-    run();
-  });
-  mo.observe(document, {childList:true, subtree:true});
+  // Ejecutar al cargar y en resize
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+  window.addEventListener('resize', ()=> setTimeout(apply, 150));
 })();
 </script>
