@@ -107,45 +107,7 @@
     #app-update-controller{position:fixed;right:14px;bottom:14px;z-index:99999;display:none}
     #app-update-controller button{padding:10px 14px;border:none;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.2);font-weight:600;background:#2563eb;color:#fff;cursor:pointer}
     #app-update-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:99999}
-  
-/* ====== Calendario semanal deslizable ====== */
-.week-strip-wrapper{ position: relative; background:#f8f9fa; }
-.week-strip{
-  display:flex; gap:.5rem;
-  overflow-x:auto; overflow-y:hidden;
-  -webkit-overflow-scrolling:touch;
-  scroll-snap-type:x mandatory;
-  padding:.5rem .75rem;
-  overscroll-behavior-x:contain;
-}
-.week-day{
-  flex:0 0 auto;
-  width: clamp(140px, 42vw, 220px);
-  scroll-snap-align:center;
-  border-radius:.75rem;
-  border:1px solid rgba(0,0,0,.12);
-  background:#fff;
-  padding:.75rem;
-  text-align:center;
-  font-weight:600;
-}
-.week-day .wd-label{ display:block; font-weight:700; }
-.week-day.is-today{ background:#2563eb; color:#fff; border-color:#2563eb; }
-.week-nav{
-  position:absolute; top:50%; transform:translateY(-50%);
-  border:none; background:rgba(0,0,0,.5); color:#fff;
-  width:32px; height:32px; border-radius:999px;
-  display:grid; place-items:center; cursor:pointer; z-index:2;
-}
-.week-nav.prev{ left:.25rem; }
-.week-nav.next{ right:.25rem; }
-/* Escritorio: mostrar 7 días sin scroll */
-@media (min-width:768px){
-  .week-strip{ overflow-x:visible; scroll-snap-type:none; }
-  .week-day{ flex:1 1 calc((100% - 6 * .5rem)/7); width:auto; }
-  .week-nav{ display:none; }
-}
-</style>
+  </style>
 </head>
 
 <body>
@@ -188,19 +150,8 @@
       <div class="card">
         <h3 style="margin-bottom:.5rem">🗓️ Calendario de Visitas</h3>
         <p style="font-size:.8rem;color:#6b7280;margin-bottom:.5rem">Toca un proveedor para contar o (si es el día) para <strong>confirmar que ya vino</strong>.</p>
-        <div class="week-strip-wrapper">
-  <button class="week-nav prev" aria-label="Anterior">&#10094;</button>
-  <div id="week-strip" class="week-strip">
-    <div class="week-day" data-dow="1"><span class="wd-label">Lunes</span></div>
-    <div class="week-day" data-dow="2"><span class="wd-label">Martes</span></div>
-    <div class="week-day" data-dow="3"><span class="wd-label">Miércoles</span></div>
-    <div class="week-day" data-dow="4"><span class="wd-label">Jueves</span></div>
-    <div class="week-day" data-dow="5"><span class="wd-label">Viernes</span></div>
-    <div class="week-day" data-dow="6"><span class="wd-label">Sábado</span></div>
-    <div class="week-day" data-dow="7"><span class="wd-label">Domingo</span></div>
-  </div>
-  <button class="week-nav next" aria-label="Siguiente">&#10095;</button>
-</div><div class="day-slot"></div></div>
+        <div class="calendar-grid" id="calendarGridUser">
+          <div class="day-col" data-day="1"><div class="day-title">Lunes</div><div class="day-slot"></div></div>
           <div class="day-col" data-day="2"><div class="day-title">Martes</div><div class="day-slot"></div></div>
           <div class="day-col" data-day="3"><div class="day-title">Miércoles</div><div class="day-slot"></div></div>
           <div class="day-col" data-day="4"><div class="day-title">Jueves</div><div class="day-slot"></div></div>
@@ -400,19 +351,8 @@ Ejemplo Cero	Refresco X	0	1234567890123	24	PAQUETE" style="min-height:150px;font
         <div class="card" style="padding:0;margin-bottom:.75rem">
           <div style="padding:1rem">
             <h2 style="margin-bottom:.5rem">🗓️ Calendario de Visitas (admin)</h2>
-            <div class="week-strip-wrapper">
-  <button class="week-nav prev" aria-label="Anterior">&#10094;</button>
-  <div id="week-strip-admin" class="week-strip">
-    <div class="week-day" data-dow="1"><span class="wd-label">Lunes</span></div>
-    <div class="week-day" data-dow="2"><span class="wd-label">Martes</span></div>
-    <div class="week-day" data-dow="3"><span class="wd-label">Miércoles</span></div>
-    <div class="week-day" data-dow="4"><span class="wd-label">Jueves</span></div>
-    <div class="week-day" data-dow="5"><span class="wd-label">Viernes</span></div>
-    <div class="week-day" data-dow="6"><span class="wd-label">Sábado</span></div>
-    <div class="week-day" data-dow="7"><span class="wd-label">Domingo</span></div>
-  </div>
-  <button class="week-nav next" aria-label="Siguiente">&#10095;</button>
-</div><div class="day-slot"></div></div>
+            <div class="calendar-grid" id="calendarGridAdmin">
+              <div class="day-col" data-day="1"><div class="day-title">Lunes</div><div class="day-slot"></div></div>
               <div class="day-col" data-day="2"><div class="day-title">Martes</div><div class="day-slot"></div></div>
               <div class="day-col" data-day="3"><div class="day-title">Miércoles</div><div class="day-slot"></div></div>
               <div class="day-col" data-day="4"><div class="day-title">Jueves</div><div class="day-slot"></div></div>
@@ -1790,53 +1730,6 @@ Ejemplo Cero\tGalletas Z\t0\t0000000000000\t1\tINDIVIDUAL`;
       $wrap && ($wrap.style.display = 'block');
     }
   });
-})();
-</script>
-<script>
-(function(){
-  function setupWeekStrip(containerId){
-    const container = document.getElementById(containerId);
-    if(!container) return;
-    const days = Array.from(container.querySelectorAll('.week-day'));
-    function getTodayIndexMondayStart(){
-      const jsDay = new Date().getDay(); // 0=Dom,1=Lun,...6=Sab
-      return (jsDay + 6) % 7; // Lunes=0..Dom=6
-    }
-    function findDayByDow(dow1to7){
-      return days.find(d => Number(d.dataset.dow) === dow1to7) || days[(dow1to7-1) % days.length];
-    }
-    function centerOnElement(el){
-      if(!el) return;
-      const cRect = container.getBoundingClientRect();
-      const eRect = el.getBoundingClientRect();
-      const currentScroll = container.scrollLeft;
-      const offset = (eRect.left - cRect.left) + currentScroll;
-      const target = offset - (cRect.width - eRect.width)/2;
-      container.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-    }
-    function centerToday(){
-      const mondayIndex = getTodayIndexMondayStart();
-      const todayDow = mondayIndex + 1;
-      const target = findDayByDow(todayDow);
-      days.forEach(d => d.classList.remove('is-today'));
-      if(target){ target.classList.add('is-today'); centerOnElement(target); }
-    }
-    const wrapper = container.closest('.week-strip-wrapper');
-    if(wrapper){
-      const prev = wrapper.querySelector('.week-nav.prev');
-      const next = wrapper.querySelector('.week-nav.next');
-      const step = () => (days[0]?.getBoundingClientRect().width || 180);
-      prev && prev.addEventListener('click', ()=> container.scrollBy({left: -step(), behavior:'smooth'}));
-      next && next.addEventListener('click', ()=> container.scrollBy({left: +step(), behavior:'smooth'}));
-    }
-    window.addEventListener('load', centerToday);
-    window.addEventListener('resize', ()=> setTimeout(centerToday, 180));
-    window.addEventListener('orientationchange', ()=> setTimeout(centerToday, 180));
-    window.centerWeekStripToday = window.centerWeekStripToday || {};
-    window.centerWeekStripToday[containerId] = centerToday;
-  }
-  setupWeekStrip('week-strip');        // usuario
-  setupWeekStrip('week-strip-admin');  // admin
 })();
 </script>
 </body>
